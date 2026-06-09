@@ -8,6 +8,40 @@ An interactive robotics and autonomy simulation project focused on robot navigat
 
 This project is designed as a portfolio-focused engineering system for autonomy, navigation, and robotics software. It starts with a browser-based robot navigation simulator and expands into weighted planning, dynamic obstacles, sensor telemetry, range-based localization, and state-estimation concepts.
 
+## Simulator Preview
+
+![Autonomy Simulation Lab simulator cockpit](docs/assets/simulator-cockpit.png)
+
+The simulator cockpit shows weighted path planning, dynamic obstacle replanning, compact telemetry, and robot navigation state in one view.
+
+![Localization and planner analysis dashboard](docs/assets/localization-dashboard.png)
+
+The analysis dashboard shows range sensor output, GNSS-inspired localization, nonlinear range least-squares estimation, Kalman filtering, telemetry export, and planner comparison metrics.
+
+## System Overview
+
+```text
+Scenario + Terrain + Obstacles
+        |
+        v
+Path Planner: BFS / A* / Dijkstra
+        |
+        v
+Search Visualization + Final Path
+        |
+        v
+Robot Animation + Dynamic Replanning
+        |
+        +--> Range Sensor Simulation
+        |
+        +--> GNSS-Inspired Localization
+        |       +--> Noisy Position Fixes
+        |       +--> Nonlinear Range Least Squares
+        |       +--> Constant-Velocity Kalman Filter
+        |
+        +--> Telemetry Export + Python Analysis
+```
+
 ## Current Version
 
 The current version implements a visual grid-based autonomy simulator using React, TypeScript, Vite, and Vitest.
@@ -355,12 +389,11 @@ Future versions may add:
 * Additional localization covariance metrics
 * Scenario validation utilities
 * Improved robot motion visualization
-* Demo GIFs and screenshots
-* Architecture diagrams
 * Expanded telemetry analysis notebooks
 * C++ path-planning benchmark module
 * Additional automated tests for dynamic replanning helpers
 * Refactoring of simulator state utilities for maintainability
+* GitHub release notes and project milestone tracking
 
 ## Portfolio Relevance
 
