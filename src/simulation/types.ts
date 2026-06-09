@@ -10,6 +10,8 @@ export type ContinuousPosition = {
 
 export type TerrainType = "normal" | "rough" | "slow";
 
+export type EditorTool = "start" | "goal" | "obstacle" | "rough" | "slow" | "clear";
+
 export type TerrainCell = {
   position: Position;
   type: TerrainType;

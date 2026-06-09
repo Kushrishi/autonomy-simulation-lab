@@ -14,6 +14,7 @@ type SimulatorGridProps = {
   visited: Position[];
   sensorReadings: SensorReading[];
   localizationSample?: LocalizationSample;
+  onCellClick?: (position: Position) => void;
 };
 
 function samePosition(a: Position, b: Position): boolean {
@@ -79,6 +80,7 @@ export default function SimulatorGrid({
   visited,
   sensorReadings,
   localizationSample,
+  onCellClick,
 }: SimulatorGridProps) {
   const cells = [];
 
@@ -140,7 +142,11 @@ export default function SimulatorGrid({
       }
 
       cells.push(
-        <div className={className} key={`${row}-${col}`}>
+        <div
+          className={className}
+          key={`${row}-${col}`}
+          onClick={() => onCellClick?.(position)}
+        >
           {label}
         </div>
       );

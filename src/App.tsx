@@ -16,19 +16,62 @@ import {
   calculateLocalizationMetrics,
 } from "./localization/localization";
 import type {
+  EditorTool,
   PlannerName,
   PlannerResult,
   Position,
   Scenario,
   SimulationMetrics,
   LocalizationSample,
+  TerrainType,
 } from "./simulation/types";
+
+function samePosition(a: Position, b: Position): boolean {
+  return a.row === b.row && a.col === b.col;
+}
+
+function removePosition(list: Position[], position: Position): Position[] {
+  return list.filter((item) => !samePosition(item, position));
+}
+
+function setScenarioTerrain(
+  scenario: Scenario,
+  position: Position,
+  type: TerrainType
+): Scenario {
+  const existingTerrain = scenario.terrain ?? [];
+
+  return {
+    ...scenario,
+    terrain: [
+      ...existingTerrain.filter(
+        (cell) => !samePosition(cell.position, position)
+      ),
+      {
+        position,
+        type,
+      },
+    ],
+  };
+}
+
+function clearScenarioTerrain(scenario: Scenario, position: Position): Scenario {
+  return {
+    ...scenario,
+    terrain: (scenario.terrain ?? []).filter(
+      (cell) => !samePosition(cell.position, position)
+    ),
+  };
+}
 
 function App() {
   const [selectedScenario, setSelectedScenario] =
     useState<Scenario>(defaultScenario);
 
   const [selectedPlanner, setSelectedPlanner] = useState<PlannerName>("BFS");
+
+  const [selectedEditorTool, setSelectedEditorTool] =
+    useState<EditorTool>("obstacle");
 
   const [plannedAlgorithm, setPlannedAlgorithm] =
     useState<PlannerName | null>(null);
@@ -137,6 +180,106 @@ function App() {
   function handlePlannerChange(planner: PlannerName) {
     setSelectedPlanner(planner);
     resetSimulation(planner, selectedScenario);
+  }
+
+  function handleCellEdit(position: Position) {
+    if (isAnimating) {
+      return;
+    }
+
+    let nextScenario: Scenario = selectedScenario;
+
+    if (selectedEditorTool === "start") {
+      if (samePosition(position, selectedScenario.goal)) {
+        return;
+      }
+
+      nextScenario = clearScenarioTerrain(
+        {
+          ...selectedScenario,
+          start: position,
+          obstacles: removePosition(selectedScenario.obstacles, position),
+        },
+        position
+      );
+    }
+
+    if (selectedEditorTool === "goal") {
+      if (samePosition(position, selectedScenario.start)) {
+        return;
+      }
+
+      nextScenario = clearScenarioTerrain(
+        {
+          ...selectedScenario,
+          goal: position,
+          obstacles: removePosition(selectedScenario.obstacles, position),
+        },
+        position
+      );
+    }
+
+    if (selectedEditorTool === "obstacle") {
+      if (
+        samePosition(position, selectedScenario.start) ||
+        samePosition(position, selectedScenario.goal)
+      ) {
+        return;
+      }
+
+      const alreadyObstacle = selectedScenario.obstacles.some((obstacle) =>
+        samePosition(obstacle, position)
+      );
+
+      nextScenario = clearScenarioTerrain(
+        {
+          ...selectedScenario,
+          obstacles: alreadyObstacle
+            ? removePosition(selectedScenario.obstacles, position)
+            : [...selectedScenario.obstacles, position],
+        },
+        position
+      );
+    }
+
+    if (selectedEditorTool === "rough" || selectedEditorTool === "slow") {
+      if (
+        samePosition(position, selectedScenario.start) ||
+        samePosition(position, selectedScenario.goal) ||
+        selectedScenario.obstacles.some((obstacle) =>
+          samePosition(obstacle, position)
+        )
+      ) {
+        return;
+      }
+
+      const existingTerrain = selectedScenario.terrain?.find((cell) =>
+        samePosition(cell.position, position)
+      );
+
+      if (existingTerrain?.type === selectedEditorTool) {
+        nextScenario = clearScenarioTerrain(selectedScenario, position);
+      } else {
+        nextScenario = setScenarioTerrain(
+          selectedScenario,
+          position,
+          selectedEditorTool
+        );
+      }
+    }
+
+    if (selectedEditorTool === "clear") {
+      nextScenario = clearScenarioTerrain(
+        {
+          ...selectedScenario,
+          obstacles: removePosition(selectedScenario.obstacles, position),
+        },
+        position
+      );
+    }
+
+    setSelectedScenario(nextScenario);
+    resetSimulation(selectedPlanner, nextScenario);
   }
 
   function handlePlanPath() {
@@ -323,6 +466,7 @@ function App() {
               visited={visibleVisited}
               sensorReadings={sensorReadings}
               localizationSample={currentLocalizationSample}
+              onCellClick={handleCellEdit}
             />
 
             <div className="legend">
@@ -354,6 +498,38 @@ function App() {
           </div>
 
           <aside className="sidebar">
+            <section className="panel">
+              <h2>Scenario Editor</h2>
+              <p className="panel-description">
+                Click grid cells to customize the current navigation scenario.
+              </p>
+
+              <div className="editor-tools">
+                {(["start", "goal", "obstacle", "rough", "slow", "clear"] as EditorTool[]).map(
+                  (tool) => (
+                    <button
+                      key={tool}
+                      className={selectedEditorTool === tool ? "active" : ""}
+                      disabled={isAnimating}
+                      onClick={() => setSelectedEditorTool(tool)}
+                    >
+                      {tool === "start"
+                        ? "Start"
+                        : tool === "goal"
+                          ? "Goal"
+                          : tool === "obstacle"
+                            ? "Obstacle"
+                            : tool === "rough"
+                              ? "Rough"
+                              : tool === "slow"
+                                ? "Slow"
+                                : "Clear"}
+                    </button>
+                  )
+                )}
+              </div>
+            </section>
+
             <ControlPanel
               scenarios={scenarios}
               selectedScenarioName={selectedScenario.name}
