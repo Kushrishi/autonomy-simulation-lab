@@ -22,3 +22,11 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Exported telemetry and generated analysis outputs
+analysis/data/*.csv
+analysis/data/*.json
+analysis/output/*.png
+
+!analysis/data/.gitkeep
+!analysis/output/.gitkeep
