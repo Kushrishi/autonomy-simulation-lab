@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState, type ChangeEvent } from "react";
 import ControlPanel from "./components/ControlPanel";
 import MetricsPanel from "./components/MetricsPanel";
 import PlannerComparisonPanel from "./components/PlannerComparisonPanel";
@@ -64,6 +64,169 @@ function clearScenarioTerrain(scenario: Scenario, position: Position): Scenario 
   };
 }
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function isValidGridSize(rows: unknown, cols: unknown): boolean {
+  return (
+    Number.isInteger(rows) &&
+    Number.isInteger(cols) &&
+    Number(rows) >= 2 &&
+    Number(cols) >= 2 &&
+    Number(rows) <= 50 &&
+    Number(cols) <= 50
+  );
+}
+
+function isValidPositionValue(
+  value: unknown,
+  rows: number,
+  cols: number
+): value is Position {
+  if (!isRecord(value)) {
+    return false;
+  }
+
+  const { row, col } = value;
+
+  return (
+    Number.isInteger(row) &&
+    Number.isInteger(col) &&
+    Number(row) >= 0 &&
+    Number(row) < rows &&
+    Number(col) >= 0 &&
+    Number(col) < cols
+  );
+}
+
+function isTerrainTypeValue(value: unknown): value is TerrainType {
+  return value === "normal" || value === "rough" || value === "slow";
+}
+
+function parsePositions(
+  value: unknown,
+  rows: number,
+  cols: number
+): Position[] | null {
+  if (!Array.isArray(value)) {
+    return null;
+  }
+
+  const positions: Position[] = [];
+
+  for (const item of value) {
+    if (!isValidPositionValue(item, rows, cols)) {
+      return null;
+    }
+
+    positions.push({
+      row: item.row,
+      col: item.col,
+    });
+  }
+
+  return positions;
+}
+
+function parseTerrain(
+  value: unknown,
+  rows: number,
+  cols: number
+): Scenario["terrain"] | null {
+  if (value === undefined) {
+    return [];
+  }
+
+  if (!Array.isArray(value)) {
+    return null;
+  }
+
+  const terrain: Scenario["terrain"] = [];
+
+  for (const item of value) {
+    if (!isRecord(item)) {
+      return null;
+    }
+
+    if (!isValidPositionValue(item.position, rows, cols)) {
+      return null;
+    }
+
+    if (!isTerrainTypeValue(item.type)) {
+      return null;
+    }
+
+    if (item.type !== "normal") {
+      terrain.push({
+        position: {
+          row: item.position.row,
+          col: item.position.col,
+        },
+        type: item.type,
+      });
+    }
+  }
+
+  return terrain;
+}
+
+function parseImportedScenario(value: unknown): Scenario | null {
+  if (!isRecord(value)) {
+    return null;
+  }
+
+  const { name, rows, cols, start, goal, obstacles, terrain } = value;
+
+  if (typeof name !== "string" || !isValidGridSize(rows, cols)) {
+    return null;
+  }
+
+  const parsedRows = Number(rows);
+  const parsedCols = Number(cols);
+
+  if (!isValidPositionValue(start, parsedRows, parsedCols)) {
+    return null;
+  }
+
+  if (!isValidPositionValue(goal, parsedRows, parsedCols)) {
+    return null;
+  }
+
+  const parsedObstacles = parsePositions(obstacles, parsedRows, parsedCols);
+  const parsedTerrain = parseTerrain(terrain, parsedRows, parsedCols);
+
+  if (!parsedObstacles || !parsedTerrain) {
+    return null;
+  }
+
+  return {
+    name: name.trim() || "Imported Scenario",
+    rows: parsedRows,
+    cols: parsedCols,
+    start: {
+      row: start.row,
+      col: start.col,
+    },
+    goal: {
+      row: goal.row,
+      col: goal.col,
+    },
+    obstacles: parsedObstacles.filter(
+      (obstacle) =>
+        !samePosition(obstacle, start) && !samePosition(obstacle, goal)
+    ),
+    terrain: parsedTerrain.filter(
+      (cell) =>
+        !samePosition(cell.position, start) &&
+        !samePosition(cell.position, goal) &&
+        !parsedObstacles.some((obstacle) =>
+          samePosition(obstacle, cell.position)
+        )
+    ),
+  };
+}
+
 function App() {
   const [selectedScenario, setSelectedScenario] =
     useState<Scenario>(defaultScenario);
@@ -72,6 +235,8 @@ function App() {
 
   const [selectedEditorTool, setSelectedEditorTool] =
     useState<EditorTool>("obstacle");
+  const [customScenario, setCustomScenario] = useState<Scenario | null>(null);
+  const scenarioFileInputRef = useRef<HTMLInputElement | null>(null);
 
   const [plannedAlgorithm, setPlannedAlgorithm] =
     useState<PlannerName | null>(null);
@@ -119,6 +284,12 @@ function App() {
     () => getRangeSensorReadings(selectedScenario, robotPosition, 5),
     [selectedScenario, robotPosition]
   );
+
+  const scenarioOptions = useMemo(
+    () => (customScenario ? [customScenario, ...scenarios] : scenarios),
+    [customScenario]
+  );
+
   // Runs the currently selected path planner and measures its runtime.  
   function runSelectedPlanner(planner: PlannerName = selectedPlanner): {
     result: PlannerResult;
@@ -170,7 +341,7 @@ function App() {
 
   function handleScenarioChange(scenarioName: string) {
     const nextScenario =
-      scenarios.find((scenario) => scenario.name === scenarioName) ??
+      scenarioOptions.find((scenario) => scenario.name === scenarioName) ??
       defaultScenario;
 
     setSelectedScenario(nextScenario);
@@ -280,6 +451,77 @@ function App() {
 
     setSelectedScenario(nextScenario);
     resetSimulation(selectedPlanner, nextScenario);
+  }
+
+  function handleExportScenario() {
+    const scenarioJson = JSON.stringify(selectedScenario, null, 2);
+    const blob = new Blob([scenarioJson], {
+      type: "application/json",
+    });
+
+    const safeName =
+      selectedScenario.name
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-|-$/g, "") || "custom-scenario";
+
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement("a");
+
+    link.href = url;
+    link.download = `${safeName}.json`;
+    link.click();
+
+    window.URL.revokeObjectURL(url);
+  }
+
+  function handleChooseScenarioFile() {
+    scenarioFileInputRef.current?.click();
+  }
+
+  function handleImportScenario(event: ChangeEvent<HTMLInputElement>) {
+    const input = event.currentTarget;
+    const file = input.files?.[0];
+
+    if (!file) {
+      return;
+    }
+
+    const reader = new FileReader();
+
+    reader.onload = () => {
+      try {
+        const parsedJson = JSON.parse(String(reader.result));
+        const importedScenario = parseImportedScenario(parsedJson);
+
+        if (!importedScenario) {
+          window.alert("Invalid scenario file. Please import a valid scenario JSON file.");
+          return;
+        }
+
+        const scenarioToLoad = {
+          ...importedScenario,
+          name: importedScenario.name.startsWith("Custom:")
+            ? importedScenario.name
+            : `Custom: ${importedScenario.name}`,
+        };
+
+        setCustomScenario(scenarioToLoad);
+        setSelectedScenario(scenarioToLoad);
+        resetSimulation(selectedPlanner, scenarioToLoad);
+      } catch {
+        window.alert("Could not read this scenario file. Please check that it is valid JSON.");
+      } finally {
+        input.value = "";
+      }
+    };
+
+    reader.onerror = () => {
+      window.alert("Could not read this scenario file.");
+      input.value = "";
+    };
+
+    reader.readAsText(file);
   }
 
   function handlePlanPath() {
@@ -529,10 +771,35 @@ function App() {
                   )
                 )}
               </div>
+              <div className="editor-actions">
+                <button
+                  className="secondary-button"
+                  disabled={isAnimating}
+                  onClick={handleExportScenario}
+                >
+                  Export Scenario
+                </button>
+
+                <button
+                  className="secondary-button"
+                  disabled={isAnimating}
+                  onClick={handleChooseScenarioFile}
+                >
+                  Import Scenario
+                </button>
+
+                <input
+                  ref={scenarioFileInputRef}
+                  className="hidden-file-input"
+                  type="file"
+                  accept="application/json,.json"
+                  onChange={handleImportScenario}
+                />
+              </div>
             </section>
 
             <ControlPanel
-              scenarios={scenarios}
+              scenarios={scenarioOptions}
               selectedScenarioName={selectedScenario.name}
               selectedPlanner={selectedPlanner}
               isAnimating={isAnimating}
