@@ -227,6 +227,71 @@ function parseImportedScenario(value: unknown): Scenario | null {
   };
 }
 
+function positionListIncludes(list: Position[], position: Position): boolean {
+  return list.some((item) => samePosition(item, position));
+}
+
+function buildScenarioWithDynamicObstacle(
+  scenario: Scenario,
+  dynamicObstaclePosition: Position | null
+): Scenario {
+  if (!dynamicObstaclePosition) {
+    return scenario;
+  }
+
+  if (positionListIncludes(scenario.obstacles, dynamicObstaclePosition)) {
+    return scenario;
+  }
+
+  return {
+    ...scenario,
+    obstacles: [...scenario.obstacles, dynamicObstaclePosition],
+    terrain: (scenario.terrain ?? []).filter(
+      (cell) => !samePosition(cell.position, dynamicObstaclePosition)
+    ),
+  };
+}
+
+function chooseDynamicObstaclePosition(
+  path: Position[],
+  currentStep: number,
+  scenario: Scenario
+): Position | null {
+  if (path.length < 5) {
+    return null;
+  }
+
+  if (currentStep < 1 || currentStep >= path.length - 2) {
+    return null;
+  }
+
+  const candidate = path[currentStep + 1];
+
+  if (!candidate) {
+    return null;
+  }
+
+  if (
+    samePosition(candidate, scenario.start) ||
+    samePosition(candidate, scenario.goal) ||
+    positionListIncludes(scenario.obstacles, candidate)
+  ) {
+    return null;
+  }
+
+  return candidate;
+}
+
+function createReplanningScenario(
+  scenario: Scenario,
+  currentPosition: Position
+): Scenario {
+  return {
+    ...scenario,
+    start: currentPosition,
+  };
+}
+
 function App() {
   const [selectedScenario, setSelectedScenario] =
     useState<Scenario>(defaultScenario);
@@ -285,9 +350,18 @@ function App() {
 
   // Sensor readings are recalculated whenever the robot position or scenario
   // changes, so the sensor panel updates during robot movement.
+  const displayedScenario = useMemo(
+    () =>
+      buildScenarioWithDynamicObstacle(
+        selectedScenario,
+        dynamicObstaclePosition
+      ),
+    [selectedScenario, dynamicObstaclePosition]
+  );
+
   const sensorReadings = useMemo(
-    () => getRangeSensorReadings(selectedScenario, robotPosition, 5),
-    [selectedScenario, robotPosition]
+    () => getRangeSensorReadings(displayedScenario, robotPosition, 5),
+    [displayedScenario, robotPosition]
   );
 
   const scenarioOptions = useMemo(
@@ -296,7 +370,10 @@ function App() {
   );
 
   // Runs the currently selected path planner and measures its runtime.  
-  function runSelectedPlanner(planner: PlannerName = selectedPlanner): {
+  function runPlannerForScenario(
+    planner: PlannerName,
+    scenario: Scenario
+  ): {
     result: PlannerResult;
     runtimeMs: number;
   } {
@@ -304,10 +381,10 @@ function App() {
 
     const result =
       planner === "BFS"
-        ? runBfs(selectedScenario)
+        ? runBfs(scenario)
         : planner === "A*"
-          ? runAstar(selectedScenario)
-          : runDijkstra(selectedScenario);
+          ? runAstar(scenario)
+          : runDijkstra(scenario);
 
     const runtimeMs = performance.now() - startTime;
 
@@ -316,26 +393,28 @@ function App() {
       runtimeMs,
     };
   }
-  // Resets robot position, planner output, visualization state, and telemetry.
+
   function resetSimulation(
     planner: PlannerName = selectedPlanner,
     scenario: Scenario = selectedScenario
   ) {
-    setLocalizationSamples([]);
-    setLocalizationStep(0);
-    setDynamicObstaclePosition(null);
-    setReplanCount(0);
-    setRobotPosition(scenario.start);
     setPlannerResult({
       path: [],
       visited: [],
       success: false,
       pathCost: 0,
     });
+
+    setPlannedAlgorithm(null);
     setVisibleVisited([]);
     setVisiblePath([]);
-    setPlannedAlgorithm(null);
     setIsAnimating(false);
+    setDynamicObstaclePosition(null);
+    setReplanCount(0);
+    setRobotPosition(scenario.start);
+    setLocalizationSamples([]);
+    setLocalizationStep(0);
+
     setMetrics({
       algorithm: planner,
       pathLength: 0,
@@ -344,6 +423,13 @@ function App() {
       runtimeMs: 0,
       status: "idle",
     });
+  }
+
+  function runSelectedPlanner(planner: PlannerName = selectedPlanner): {
+    result: PlannerResult;
+    runtimeMs: number;
+  } {
+    return runPlannerForScenario(planner, displayedScenario);
   }
 
   function handleScenarioChange(scenarioName: string) {
@@ -369,6 +455,10 @@ function App() {
     resetSimulation(selectedPlanner, selectedScenario);
   }
 
+  function handleResetSimulation() {
+      resetSimulation(selectedPlanner, selectedScenario);
+    }
+    
   function handleCellEdit(position: Position) {
     if (isAnimating) {
       return;
@@ -624,17 +714,19 @@ function App() {
   // the selected planner is run first.
   function handleAnimate() {
     const canUseExistingPlan =
-      plannerResult.path.length > 0 && plannedAlgorithm === selectedPlanner;
+      plannerResult.path.length > 0 &&
+      plannedAlgorithm === selectedPlanner &&
+      !dynamicObstacleMode &&
+      !dynamicObstaclePosition;
 
     const plannerRun = canUseExistingPlan
       ? {
         result: plannerResult,
         runtimeMs: metrics.runtimeMs,
       }
-      : runSelectedPlanner();
+      : runPlannerForScenario(selectedPlanner, displayedScenario);
 
     const { result, runtimeMs } = plannerRun;
-    const nextLocalizationSamples = buildLocalizationSamples(result.path);
 
     if (!result.success || result.path.length === 0) {
       setMetrics({
@@ -648,42 +740,137 @@ function App() {
       return;
     }
 
+    let activePath = result.path;
+    let activeVisited = result.visited;
+    let activeRuntimeMs = runtimeMs;
+    let runtimeScenario = displayedScenario;
+    let obstacleHasBeenInserted = dynamicObstaclePosition !== null;
+
     setPlannerResult(result);
     setPlannedAlgorithm(selectedPlanner);
     setIsAnimating(true);
-    setVisibleVisited(result.visited);
-    setVisiblePath(result.path);
-    setLocalizationSamples(nextLocalizationSamples);
+    setVisibleVisited(activeVisited);
+    setVisiblePath(activePath);
+    setLocalizationSamples(buildLocalizationSamples(activePath));
     setLocalizationStep(0);
 
     setMetrics({
       algorithm: selectedPlanner,
-      pathLength: Math.max(result.path.length - 1, 0),
-      nodesVisited: result.visited.length,
+      pathLength: Math.max(activePath.length - 1, 0),
+      nodesVisited: activeVisited.length,
       currentStep: 0,
-      runtimeMs,
+      runtimeMs: activeRuntimeMs,
       status: "running",
     });
 
     let step = 0;
 
     const movementIntervalId = window.setInterval(() => {
-      const nextPosition = result.path[step];
+      const currentPosition = activePath[step];
 
-      setRobotPosition(nextPosition);
+      if (!currentPosition) {
+        window.clearInterval(movementIntervalId);
+        setIsAnimating(false);
+        return;
+      }
+
+      setRobotPosition(currentPosition);
       setLocalizationStep(step);
+
+      if (
+        dynamicObstacleMode &&
+        !obstacleHasBeenInserted &&
+        step > 0 &&
+        step < activePath.length - 2
+      ) {
+        const newObstaclePosition = chooseDynamicObstaclePosition(
+          activePath,
+          step,
+          runtimeScenario
+        );
+
+        if (newObstaclePosition) {
+          obstacleHasBeenInserted = true;
+          runtimeScenario = buildScenarioWithDynamicObstacle(
+            runtimeScenario,
+            newObstaclePosition
+          );
+
+          setDynamicObstaclePosition(newObstaclePosition);
+        }
+      }
+
+      const nextPosition = activePath[step + 1];
+      const routeIsBlocked =
+        nextPosition &&
+        positionListIncludes(runtimeScenario.obstacles, nextPosition);
+
+      if (routeIsBlocked) {
+        const replanningScenario = createReplanningScenario(
+          runtimeScenario,
+          currentPosition
+        );
+
+        const replanRun = runPlannerForScenario(
+          selectedPlanner,
+          replanningScenario
+        );
+
+        activeRuntimeMs += replanRun.runtimeMs;
+
+        if (!replanRun.result.success || replanRun.result.path.length === 0) {
+          setPlannerResult(replanRun.result);
+          setVisibleVisited(replanRun.result.visited);
+          setVisiblePath([]);
+          setMetrics({
+            algorithm: selectedPlanner,
+            pathLength: 0,
+            nodesVisited: replanRun.result.visited.length,
+            currentStep: step,
+            runtimeMs: activeRuntimeMs,
+            status: "failed",
+          });
+          window.clearInterval(movementIntervalId);
+          setIsAnimating(false);
+          return;
+        }
+
+        activePath = replanRun.result.path;
+        activeVisited = replanRun.result.visited;
+        step = 0;
+
+        setReplanCount((currentCount) => currentCount + 1);
+        setPlannerResult(replanRun.result);
+        setPlannedAlgorithm(selectedPlanner);
+        setVisibleVisited(activeVisited);
+        setVisiblePath(activePath);
+        setLocalizationSamples(buildLocalizationSamples(activePath));
+        setLocalizationStep(0);
+
+        setMetrics({
+          algorithm: selectedPlanner,
+          pathLength: Math.max(activePath.length - 1, 0),
+          nodesVisited: activeVisited.length,
+          currentStep: 0,
+          runtimeMs: activeRuntimeMs,
+          status: "running",
+        });
+
+        return;
+      }
+
       setMetrics({
         algorithm: selectedPlanner,
-        pathLength: Math.max(result.path.length - 1, 0),
-        nodesVisited: result.visited.length,
+        pathLength: Math.max(activePath.length - 1, 0),
+        nodesVisited: activeVisited.length,
         currentStep: step,
-        runtimeMs,
-        status: step === result.path.length - 1 ? "complete" : "running",
+        runtimeMs: activeRuntimeMs,
+        status: step === activePath.length - 1 ? "complete" : "running",
       });
 
       step++;
 
-      if (step >= result.path.length) {
+      if (step >= activePath.length) {
         window.clearInterval(movementIntervalId);
         setIsAnimating(false);
       }
@@ -718,7 +905,7 @@ function App() {
             </div>
 
             <SimulatorGrid
-              scenario={selectedScenario}
+              scenario={displayedScenario}
               robotPosition={robotPosition}
               path={visiblePath}
               visited={visibleVisited}
@@ -816,8 +1003,8 @@ function App() {
             <section className="panel">
               <h2>Dynamic Obstacles</h2>
               <p className="panel-description">
-                Prepare the simulator for dynamic obstacle insertion and path replanning
-                during robot movement.
+                Insert a dynamic obstacle during robot movement and replan from the robot&apos;s
+                current position when the active route becomes blocked.
               </p>
 
               <button
@@ -830,8 +1017,9 @@ function App() {
               </button>
 
               <p className="control-note">
-                When enabled, the next milestone will allow a new obstacle to appear on the
-                robot&apos;s planned route and trigger replanning from the current position.
+                When enabled, a new obstacle can appear on the robot&apos;s planned route.
+                The simulator detects the blocked route, replans, and continues toward the
+                goal when a valid alternate path exists.
               </p>
             </section>
             <ControlPanel
@@ -844,7 +1032,7 @@ function App() {
               onPlanPath={handlePlanPath}
               onVisualizeSearch={handleVisualizeSearch}
               onAnimate={handleAnimate}
-              onReset={resetSimulation}
+              onReset={handleResetSimulation}
             />
 
             <MetricsPanel
