@@ -6,7 +6,14 @@ import {
   createDefaultBeacons,
   estimatePositionFromRanges,
 } from "./localization";
-import type { Position } from "../simulation/types";
+import type { ContinuousPosition, Position } from "../simulation/types";
+
+function distance(a: ContinuousPosition, b: ContinuousPosition): number {
+  const rowDifference = a.row - b.row;
+  const colDifference = a.col - b.col;
+
+  return Math.sqrt(rowDifference * rowDifference + colDifference * colDifference);
+}
 
 describe("localization validation", () => {
   it("creates one localization sample for each path position", () => {
@@ -38,7 +45,7 @@ describe("localization validation", () => {
     expect(samples[0].rangeError).toBeGreaterThanOrEqual(0);
   });
 
-  it("calculates RMSE from localization errors correctly", () => {
+  it("calculates RMSE from smoothing and range least-squares errors correctly", () => {
     const path: Position[] = [
       { row: 0, col: 0 },
       { row: 0, col: 1 },
@@ -79,7 +86,7 @@ describe("localization validation", () => {
     expect(beacons[3].position).toEqual({ row: 9, col: 11 });
   });
 
-  it("estimates position from range observations using least squares", () => {
+  it("recovers the true position from zero-noise range observations", () => {
     const truePosition = { row: 4, col: 6 };
     const beacons = createDefaultBeacons(10, 10);
 
@@ -98,5 +105,54 @@ describe("localization validation", () => {
 
     expect(estimate.row).toBeCloseTo(truePosition.row, 2);
     expect(estimate.col).toBeCloseTo(truePosition.col, 2);
+    expect(distance(estimate, truePosition)).toBeLessThan(0.02);
+  });
+
+  it("produces near-zero residuals for zero-noise observations", () => {
+    const path: Position[] = [{ row: 4, col: 6 }];
+    const samples = buildLocalizationSamples(path, 0, 10, 10);
+    const sample = samples[0];
+
+    expect(sample.rangeError).toBeLessThan(1e-6);
+
+    for (const observation of sample.rangeObservations) {
+      expect(Math.abs(observation.residual)).toBeLessThan(1e-6);
+    }
+  });
+
+  it("keeps noisy range estimates finite and reasonably close to the true path", () => {
+    const path: Position[] = [
+      { row: 2, col: 2 },
+      { row: 3, col: 3 },
+      { row: 4, col: 4 },
+      { row: 5, col: 5 },
+    ];
+
+    const samples = buildLocalizationSamples(path, 0.35, 10, 10);
+
+    for (const sample of samples) {
+      expect(Number.isFinite(sample.rangeEstimatedPosition.row)).toBe(true);
+      expect(Number.isFinite(sample.rangeEstimatedPosition.col)).toBe(true);
+      expect(Number.isFinite(sample.rangeError)).toBe(true);
+      expect(sample.rangeError).toBeLessThan(1.5);
+    }
+  });
+
+  it("stores range residuals as measured range minus predicted range", () => {
+    const path: Position[] = [{ row: 3, col: 7 }];
+    const samples = buildLocalizationSamples(path, 0.35, 10, 10);
+    const sample = samples[0];
+
+    for (const observation of sample.rangeObservations) {
+      const predictedRange = distance(
+        sample.rangeEstimatedPosition,
+        observation.beaconPosition
+      );
+
+      expect(observation.residual).toBeCloseTo(
+        observation.measuredRange - predictedRange,
+        8
+      );
+    }
   });
 });

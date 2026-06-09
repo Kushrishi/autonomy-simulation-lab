@@ -92,6 +92,9 @@ export function buildRangeObservations(
   });
 }
 
+// Solves an unweighted nonlinear parametric least-squares range-positioning
+// problem using Gauss-Newton iterations. Unknowns are row and col; observations
+// are noisy ranges to fixed beacons.
 export function estimatePositionFromRanges(
   observations: RangeObservation[],
   initialEstimate: ContinuousPosition,
