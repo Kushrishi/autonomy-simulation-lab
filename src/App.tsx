@@ -456,9 +456,9 @@ function App() {
   }
 
   function handleResetSimulation() {
-      resetSimulation(selectedPlanner, selectedScenario);
-    }
-    
+    resetSimulation(selectedPlanner, selectedScenario);
+  }
+
   function handleCellEdit(position: Position) {
     if (isAnimating) {
       return;
@@ -943,6 +943,48 @@ function App() {
           </div>
 
           <aside className="sidebar">
+            <ControlPanel
+              scenarios={scenarioOptions}
+              selectedScenarioName={selectedScenario.name}
+              selectedPlanner={selectedPlanner}
+              isAnimating={isAnimating}
+              onScenarioChange={handleScenarioChange}
+              onPlannerChange={handlePlannerChange}
+              onPlanPath={handlePlanPath}
+              onVisualizeSearch={handleVisualizeSearch}
+              onAnimate={handleAnimate}
+              onReset={handleResetSimulation}
+            />
+
+            <section className="panel">
+              <h2>Dynamic Obstacles</h2>
+              <p className="panel-description">
+                Insert a dynamic obstacle during robot movement and replan from the robot&apos;s
+                current position when the active route becomes blocked.
+              </p>
+
+              <button
+                className={`secondary-button ${dynamicObstacleMode ? "active-mode-button" : ""}`}
+                disabled={isAnimating}
+                onClick={handleDynamicObstacleModeToggle}
+              >
+                {dynamicObstacleMode ? "Dynamic Mode On" : "Dynamic Mode Off"}
+              </button>
+
+              <p className="control-note">
+                When enabled, a new obstacle can appear on the robot&apos;s planned route.
+                The simulator detects the blocked route, replans, and continues toward the
+                goal when a valid alternate path exists.
+              </p>
+            </section>
+
+            <MetricsPanel
+              metrics={metrics}
+              dynamicObstacleMode={dynamicObstacleMode}
+              replanCount={replanCount}
+              dynamicObstaclePosition={dynamicObstaclePosition}
+            />
+
             <section className="panel">
               <h2>Scenario Editor</h2>
               <p className="panel-description">
@@ -974,6 +1016,7 @@ function App() {
                   )
                 )}
               </div>
+
               <div className="editor-actions">
                 <button
                   className="secondary-button"
@@ -1000,47 +1043,6 @@ function App() {
                 />
               </div>
             </section>
-            <section className="panel">
-              <h2>Dynamic Obstacles</h2>
-              <p className="panel-description">
-                Insert a dynamic obstacle during robot movement and replan from the robot&apos;s
-                current position when the active route becomes blocked.
-              </p>
-
-              <button
-                className={`secondary-button ${dynamicObstacleMode ? "active-mode-button" : ""
-                  }`}
-                disabled={isAnimating}
-                onClick={handleDynamicObstacleModeToggle}
-              >
-                {dynamicObstacleMode ? "Dynamic Mode On" : "Dynamic Mode Off"}
-              </button>
-
-              <p className="control-note">
-                When enabled, a new obstacle can appear on the robot&apos;s planned route.
-                The simulator detects the blocked route, replans, and continues toward the
-                goal when a valid alternate path exists.
-              </p>
-            </section>
-            <ControlPanel
-              scenarios={scenarioOptions}
-              selectedScenarioName={selectedScenario.name}
-              selectedPlanner={selectedPlanner}
-              isAnimating={isAnimating}
-              onScenarioChange={handleScenarioChange}
-              onPlannerChange={handlePlannerChange}
-              onPlanPath={handlePlanPath}
-              onVisualizeSearch={handleVisualizeSearch}
-              onAnimate={handleAnimate}
-              onReset={handleResetSimulation}
-            />
-
-            <MetricsPanel
-              metrics={metrics}
-              dynamicObstacleMode={dynamicObstacleMode}
-              replanCount={replanCount}
-              dynamicObstaclePosition={dynamicObstaclePosition}
-            />
           </aside>
         </section>
       </main>
