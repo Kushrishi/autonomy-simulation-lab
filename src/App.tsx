@@ -9,6 +9,7 @@ import { runAstar } from "./planning/astar";
 import { runBfs } from "./planning/bfs";
 import { defaultScenario, scenarios } from "./simulation/scenarios";
 import LocalizationPanel from "./components/LocalizationPanel";
+import TelemetryExportPanel from "./components/TelemetryExportPanel";
 import {
   buildLocalizationSamples,
   calculateLocalizationMetrics,
@@ -19,7 +20,7 @@ import type {
   Position,
   Scenario,
   SimulationMetrics,
-  LocalizationSample,    
+  LocalizationSample,
 } from "./simulation/types";
 
 function App() {
@@ -53,26 +54,26 @@ function App() {
     runtimeMs: 0,
     status: "idle",
   });
-  
+
   const [localizationSamples, setLocalizationSamples] = useState<
-  LocalizationSample[]
->([]);
+    LocalizationSample[]
+  >([]);
 
-const [localizationStep, setLocalizationStep] = useState(0);
+  const [localizationStep, setLocalizationStep] = useState(0);
 
-const currentLocalizationSample = localizationSamples[localizationStep];
+  const currentLocalizationSample = localizationSamples[localizationStep];
 
-const localizationMetrics = calculateLocalizationMetrics(
-  localizationSamples,
-  localizationStep
-);
+  const localizationMetrics = calculateLocalizationMetrics(
+    localizationSamples,
+    localizationStep
+  );
 
   // Sensor readings are recalculated whenever the robot position or scenario
   // changes, so the sensor panel updates during robot movement.
   const sensorReadings = useMemo(
-  () => getRangeSensorReadings(selectedScenario, robotPosition, 5),
-  [selectedScenario, robotPosition]
-);
+    () => getRangeSensorReadings(selectedScenario, robotPosition, 5),
+    [selectedScenario, robotPosition]
+  );
   // Runs the currently selected path planner and measures its runtime.  
   function runSelectedPlanner(
     scenario: Scenario = selectedScenario
@@ -221,9 +222,9 @@ const localizationMetrics = calculateLocalizationMetrics(
 
     const plannerRun = canUseExistingPlan
       ? {
-          result: plannerResult,
-          runtimeMs: metrics.runtimeMs,
-        }
+        result: plannerResult,
+        runtimeMs: metrics.runtimeMs,
+      }
       : runSelectedPlanner();
 
     const { result, runtimeMs } = plannerRun;
@@ -310,13 +311,13 @@ const localizationMetrics = calculateLocalizationMetrics(
           </div>
 
           <SimulatorGrid
-  scenario={selectedScenario}
-  robotPosition={robotPosition}
-  path={visiblePath}
-  visited={visibleVisited}
-  sensorReadings={sensorReadings}
-  localizationSample={currentLocalizationSample}
-/>
+            scenario={selectedScenario}
+            robotPosition={robotPosition}
+            path={visiblePath}
+            visited={visibleVisited}
+            sensorReadings={sensorReadings}
+            localizationSample={currentLocalizationSample}
+          />
 
           <div className="legend">
             <span>
@@ -356,12 +357,22 @@ const localizationMetrics = calculateLocalizationMetrics(
 
           <MetricsPanel metrics={metrics} />
 
-<SensorPanel readings={sensorReadings} />
-<LocalizationPanel
-  sample={currentLocalizationSample}
-  metrics={localizationMetrics}
-/>
-<PlannerComparisonPanel scenario={selectedScenario} />
+          <SensorPanel readings={sensorReadings} />
+          <LocalizationPanel
+            sample={currentLocalizationSample}
+            metrics={localizationMetrics}
+          />
+
+          <TelemetryExportPanel
+            scenario={selectedScenario}
+            algorithm={plannedAlgorithm ?? selectedPlanner}
+            metrics={metrics}
+            path={visiblePath}
+            visited={visibleVisited}
+            localizationSamples={localizationSamples}
+          />
+
+          <PlannerComparisonPanel scenario={selectedScenario} />
         </aside>
       </section>
     </main>
