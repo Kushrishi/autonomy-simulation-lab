@@ -84,9 +84,11 @@ export type LocalizationSample = {
   measuredPosition: ContinuousPosition;
   estimatedPosition: ContinuousPosition;
   rangeEstimatedPosition: ContinuousPosition;
+  kalmanEstimatedPosition: ContinuousPosition;
   rangeObservations: RangeObservation[];
   error: number;
   rangeError: number;
+  kalmanError: number;
 };
 
 export type LocalizationMetrics = {
@@ -97,5 +99,8 @@ export type LocalizationMetrics = {
   rangeCurrentError: number;
   rangeAverageError: number;
   rangeRmse: number;
+  kalmanCurrentError: number;
+  kalmanAverageError: number;
+  kalmanRmse: number;
   sampleCount: number;
 };

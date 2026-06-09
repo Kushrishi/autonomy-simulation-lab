@@ -31,7 +31,7 @@ describe("localization validation", () => {
     expect(samples[2].step).toBe(2);
   });
 
-  it("adds range observations and range-based estimates to each sample", () => {
+  it("adds range and Kalman estimates to each sample", () => {
     const path: Position[] = [
       { row: 1, col: 1 },
       { row: 1, col: 2 },
@@ -43,9 +43,11 @@ describe("localization validation", () => {
     expect(samples[0].rangeObservations).toHaveLength(4);
     expect(samples[0].rangeEstimatedPosition).toBeDefined();
     expect(samples[0].rangeError).toBeGreaterThanOrEqual(0);
+    expect(samples[0].kalmanEstimatedPosition).toBeDefined();
+    expect(samples[0].kalmanError).toBeGreaterThanOrEqual(0);
   });
 
-  it("calculates RMSE from smoothing and range least-squares errors correctly", () => {
+  it("calculates RMSE from smoothing, range least-squares, and Kalman errors correctly", () => {
     const path: Position[] = [
       { row: 0, col: 0 },
       { row: 0, col: 1 },
@@ -68,12 +70,21 @@ describe("localization validation", () => {
       ) / samples.length
     );
 
+    const expectedKalmanRmse = Math.sqrt(
+      samples.reduce(
+        (sum, sample) => sum + sample.kalmanError * sample.kalmanError,
+        0
+      ) / samples.length
+    );
+
     expect(metrics.sampleCount).toBe(samples.length);
     expect(metrics.rmse).toBeCloseTo(expectedRmse, 8);
     expect(metrics.rangeRmse).toBeCloseTo(expectedRangeRmse, 8);
+    expect(metrics.kalmanRmse).toBeCloseTo(expectedKalmanRmse, 8);
     expect(metrics.maxError).toBeGreaterThanOrEqual(metrics.currentError);
     expect(metrics.averageError).toBeGreaterThanOrEqual(0);
     expect(metrics.rangeAverageError).toBeGreaterThanOrEqual(0);
+    expect(metrics.kalmanAverageError).toBeGreaterThanOrEqual(0);
   });
 
   it("creates four default beacons around the grid corners", () => {
@@ -90,12 +101,7 @@ describe("localization validation", () => {
     const truePosition = { row: 4, col: 6 };
     const beacons = createDefaultBeacons(10, 10);
 
-    const observations = buildRangeObservations(
-      truePosition,
-      beacons,
-      0,
-      0
-    );
+    const observations = buildRangeObservations(truePosition, beacons, 0, 0);
 
     const estimate = estimatePositionFromRanges(
       observations,
