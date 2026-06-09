@@ -751,7 +751,14 @@ function App() {
     setIsAnimating(true);
     setVisibleVisited(activeVisited);
     setVisiblePath(activePath);
-    setLocalizationSamples(buildLocalizationSamples(activePath));
+    setLocalizationSamples(
+      buildLocalizationSamples(
+        activePath,
+        0.35,
+        runtimeScenario.rows,
+        runtimeScenario.cols
+      )
+    );
     setLocalizationStep(0);
 
     setMetrics({
@@ -844,7 +851,14 @@ function App() {
         setPlannedAlgorithm(selectedPlanner);
         setVisibleVisited(activeVisited);
         setVisiblePath(activePath);
-        setLocalizationSamples(buildLocalizationSamples(activePath));
+        setLocalizationSamples(
+          buildLocalizationSamples(
+            activePath,
+            0.35,
+            runtimeScenario.rows,
+            runtimeScenario.cols
+          )
+        );
         setLocalizationStep(0);
 
         setMetrics({
@@ -950,7 +964,7 @@ function App() {
                 </strong>
               </div>
             </div>
-            
+
             <div className="legend">
               <span>
                 <i className="legend-dot robot-dot"></i>Robot

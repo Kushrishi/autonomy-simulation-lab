@@ -65,12 +65,28 @@ export type SensorReading = {
   obstaclePosition?: Position;
 };
 
+export type LocalizationBeacon = {
+  id: string;
+  position: ContinuousPosition;
+};
+
+export type RangeObservation = {
+  beaconId: string;
+  beaconPosition: ContinuousPosition;
+  trueRange: number;
+  measuredRange: number;
+  residual: number;
+};
+
 export type LocalizationSample = {
   step: number;
   truePosition: ContinuousPosition;
   measuredPosition: ContinuousPosition;
   estimatedPosition: ContinuousPosition;
+  rangeEstimatedPosition: ContinuousPosition;
+  rangeObservations: RangeObservation[];
   error: number;
+  rangeError: number;
 };
 
 export type LocalizationMetrics = {
@@ -78,5 +94,8 @@ export type LocalizationMetrics = {
   averageError: number;
   maxError: number;
   rmse: number;
+  rangeCurrentError: number;
+  rangeAverageError: number;
+  rangeRmse: number;
   sampleCount: number;
 };
