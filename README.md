@@ -4,6 +4,10 @@
 
 **Live Demo:** https://kushrishi.github.io/autonomy-simulation-lab/
 
+**Latest Release:** v1.0.0 - Autonomy Simulation Lab
+
+**License:** MIT
+
 An interactive robotics and autonomy simulation project focused on robot navigation, path planning, search visualization, dynamic replanning, sensor simulation, GNSS-inspired localization, telemetry export, and offline analysis.
 
 This project is designed as a portfolio-focused engineering system for autonomy, navigation, and robotics software. It starts with a browser-based robot navigation simulator and expands into weighted planning, dynamic obstacles, sensor telemetry, range-based localization, and state-estimation concepts.
@@ -44,7 +48,7 @@ Robot Animation + Dynamic Replanning
 
 ## Current Version
 
-The current version implements a visual grid-based autonomy simulator using React, TypeScript, Vite, and Vitest.
+The v1.0.0 release implements a visual grid-based autonomy simulator using React, TypeScript, Vite, and Vitest.
 
 The simulator includes:
 
@@ -80,10 +84,10 @@ The simulator includes:
 * Localization error metrics including RMSE
 * Telemetry export to JSON and CSV
 * Python analysis scripts for exported telemetry
-* Automated validation tests for planner, localization, priority queue, and estimation behavior
+* Automated validation tests for planner, localization, priority queue, scenario import, dynamic obstacle, and estimation behavior
 * GitHub Actions CI for automated test and build validation
 * GitHub Pages deployment for a live browser demo
-* Professional dark simulator UI
+* MIT license and v1.0.0 release packaging
 
 ## Demo Scenarios
 
@@ -286,6 +290,8 @@ Current tests verify that:
 * Planners fail cleanly when the goal is blocked
 * The min-priority queue dequeues nodes in correct priority order
 * Priority queue tie-breaking behaves deterministically
+* Dynamic obstacle helper behavior is deterministic and testable
+* Scenario import validation accepts valid JSON and rejects malformed inputs
 * Localization samples are generated correctly
 * RMSE is calculated consistently from localization error values
 * Range observations are generated for localization samples
@@ -380,20 +386,18 @@ A good manual test sequence is:
 
 This demo shows weighted path planning, dynamic replanning, telemetry, range sensing, and localization in one scenario.
 
-## Planned Features
+## Future Work
 
 Future versions may add:
 
 * Range-based extended Kalman filter
 * More realistic range sensor noise
 * Additional localization covariance metrics
-* Scenario validation utilities
 * Improved robot motion visualization
 * Expanded telemetry analysis notebooks
 * C++ path-planning benchmark module
-* Additional automated tests for dynamic replanning helpers
-* Refactoring of simulator state utilities for maintainability
-* GitHub release notes and project milestone tracking
+* Additional autonomy scenarios and stress tests
+* More advanced sensor fusion and uncertainty visualization
 
 ## Portfolio Relevance
 
