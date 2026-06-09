@@ -264,6 +264,36 @@ h1 {
   display: inline-block;
 }
 
+.telemetry-strip {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(118px, 1fr));
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.telemetry-pill {
+  padding: 9px 10px;
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  border-radius: 13px;
+  background: rgba(30, 41, 59, 0.72);
+}
+
+.telemetry-pill span {
+  display: block;
+  margin-bottom: 4px;
+  color: #94a3b8;
+  font-size: 0.66rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.telemetry-pill strong {
+  color: #f8fafc;
+  font-size: 0.82rem;
+  text-transform: capitalize;
+}
+
 .robot-dot {
   background: #38bdf8;
 }

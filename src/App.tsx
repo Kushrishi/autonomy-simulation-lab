@@ -913,7 +913,44 @@ function App() {
               localizationSample={currentLocalizationSample}
               onCellClick={handleCellEdit}
             />
+            <div className="telemetry-strip" aria-label="Compact simulation telemetry">
+              <div className="telemetry-pill">
+                <span>Status</span>
+                <strong>{metrics.status}</strong>
+              </div>
 
+              <div className="telemetry-pill">
+                <span>Planner</span>
+                <strong>{metrics.algorithm}</strong>
+              </div>
+
+              <div className="telemetry-pill">
+                <span>Step</span>
+                <strong>
+                  {metrics.currentStep} / {metrics.pathLength}
+                </strong>
+              </div>
+
+              <div className="telemetry-pill">
+                <span>Replans</span>
+                <strong>{replanCount}</strong>
+              </div>
+
+              <div className="telemetry-pill">
+                <span>Dynamic Mode</span>
+                <strong>{dynamicObstacleMode ? "On" : "Off"}</strong>
+              </div>
+
+              <div className="telemetry-pill">
+                <span>Dynamic Obstacle</span>
+                <strong>
+                  {dynamicObstaclePosition
+                    ? `(${dynamicObstaclePosition.row}, ${dynamicObstaclePosition.col})`
+                    : "None"}
+                </strong>
+              </div>
+            </div>
+            
             <div className="legend">
               <span>
                 <i className="legend-dot robot-dot"></i>Robot
