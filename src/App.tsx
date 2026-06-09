@@ -256,6 +256,11 @@ function App() {
   const [visiblePath, setVisiblePath] = useState<Position[]>([]);
   const [isAnimating, setIsAnimating] = useState(false);
 
+  const [dynamicObstacleMode, setDynamicObstacleMode] = useState(false);
+  const [dynamicObstaclePosition, setDynamicObstaclePosition] =
+    useState<Position | null>(null);
+  const [replanCount, setReplanCount] = useState(0);
+
   const [metrics, setMetrics] = useState<SimulationMetrics>({
     algorithm: selectedPlanner,
     pathLength: 0,
@@ -318,6 +323,8 @@ function App() {
   ) {
     setLocalizationSamples([]);
     setLocalizationStep(0);
+    setDynamicObstaclePosition(null);
+    setReplanCount(0);
     setRobotPosition(scenario.start);
     setPlannerResult({
       path: [],
@@ -351,6 +358,15 @@ function App() {
   function handlePlannerChange(planner: PlannerName) {
     setSelectedPlanner(planner);
     resetSimulation(planner, selectedScenario);
+  }
+
+  function handleDynamicObstacleModeToggle() {
+    if (isAnimating) {
+      return;
+    }
+
+    setDynamicObstacleMode((currentValue) => !currentValue);
+    resetSimulation(selectedPlanner, selectedScenario);
   }
 
   function handleCellEdit(position: Position) {
@@ -797,7 +813,27 @@ function App() {
                 />
               </div>
             </section>
+            <section className="panel">
+              <h2>Dynamic Obstacles</h2>
+              <p className="panel-description">
+                Prepare the simulator for dynamic obstacle insertion and path replanning
+                during robot movement.
+              </p>
 
+              <button
+                className={`secondary-button ${dynamicObstacleMode ? "active-mode-button" : ""
+                  }`}
+                disabled={isAnimating}
+                onClick={handleDynamicObstacleModeToggle}
+              >
+                {dynamicObstacleMode ? "Dynamic Mode On" : "Dynamic Mode Off"}
+              </button>
+
+              <p className="control-note">
+                When enabled, the next milestone will allow a new obstacle to appear on the
+                robot&apos;s planned route and trigger replanning from the current position.
+              </p>
+            </section>
             <ControlPanel
               scenarios={scenarioOptions}
               selectedScenarioName={selectedScenario.name}
@@ -811,7 +847,12 @@ function App() {
               onReset={resetSimulation}
             />
 
-            <MetricsPanel metrics={metrics} />
+            <MetricsPanel
+              metrics={metrics}
+              dynamicObstacleMode={dynamicObstacleMode}
+              replanCount={replanCount}
+              dynamicObstaclePosition={dynamicObstaclePosition}
+            />
           </aside>
         </section>
       </main>

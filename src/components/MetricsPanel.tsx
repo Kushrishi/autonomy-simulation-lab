@@ -1,10 +1,22 @@
-import type { SimulationMetrics } from "../simulation/types";
+import type { Position, SimulationMetrics } from "../simulation/types";
 
 type MetricsPanelProps = {
   metrics: SimulationMetrics;
+  dynamicObstacleMode: boolean;
+  replanCount: number;
+  dynamicObstaclePosition: Position | null;
 };
 
-export default function MetricsPanel({ metrics }: MetricsPanelProps) {
+export default function MetricsPanel({
+  metrics,
+  dynamicObstacleMode,
+  replanCount,
+  dynamicObstaclePosition,
+}: MetricsPanelProps) {
+  const dynamicObstacleLabel = dynamicObstaclePosition
+    ? `(${dynamicObstaclePosition.row}, ${dynamicObstaclePosition.col})`
+    : "None";
+
   return (
     <section className="panel">
       <h2>Telemetry</h2>
@@ -37,6 +49,21 @@ export default function MetricsPanel({ metrics }: MetricsPanelProps) {
       <div className="metric-row">
         <span>Runtime</span>
         <strong>{metrics.runtimeMs.toFixed(2)} ms</strong>
+      </div>
+
+      <div className="metric-row">
+        <span>Dynamic mode</span>
+        <strong>{dynamicObstacleMode ? "on" : "off"}</strong>
+      </div>
+
+      <div className="metric-row">
+        <span>Replans</span>
+        <strong>{replanCount}</strong>
+      </div>
+
+      <div className="metric-row">
+        <span>Dynamic obstacle</span>
+        <strong>{dynamicObstacleLabel}</strong>
       </div>
     </section>
   );

@@ -443,6 +443,11 @@ h1 {
   opacity: 0.45;
 }
 
+.active-mode-button {
+  border-color: #facc15;
+  box-shadow: 0 0 0 2px rgba(250, 204, 21, 0.25);
+}
+
 .dashboard-grid {
   width: min(1000px, calc(100% - 48px));
   margin: 18px auto 0;
