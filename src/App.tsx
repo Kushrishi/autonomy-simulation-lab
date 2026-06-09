@@ -2,11 +2,22 @@ import { useState } from "react";
 import ControlPanel from "./components/ControlPanel";
 import MetricsPanel from "./components/MetricsPanel";
 import SimulatorGrid from "./components/SimulatorGrid";
+import { runAstar } from "./planning/astar";
 import { runBfs } from "./planning/bfs";
 import { defaultScenario } from "./simulation/scenarios";
-import type { PlannerResult, Position, SimulationMetrics } from "./simulation/types";
+import type {
+  PlannerName,
+  PlannerResult,
+  Position,
+  SimulationMetrics,
+} from "./simulation/types";
 
 function App() {
+  const [selectedPlanner, setSelectedPlanner] = useState<PlannerName>("BFS");
+
+  const [plannedAlgorithm, setPlannedAlgorithm] =
+    useState<PlannerName | null>(null);
+
   const [robotPosition, setRobotPosition] = useState<Position>(
     defaultScenario.start
   );
@@ -22,49 +33,120 @@ function App() {
   const [isAnimating, setIsAnimating] = useState(false);
 
   const [metrics, setMetrics] = useState<SimulationMetrics>({
+    algorithm: selectedPlanner,
     pathLength: 0,
     nodesVisited: 0,
     currentStep: 0,
+    runtimeMs: 0,
     status: "idle",
   });
 
+  function runSelectedPlanner(): {
+    result: PlannerResult;
+    runtimeMs: number;
+  } {
+    const startTime = performance.now();
+
+    const result =
+      selectedPlanner === "BFS"
+        ? runBfs(defaultScenario)
+        : runAstar(defaultScenario);
+
+    const endTime = performance.now();
+
+    return {
+      result,
+      runtimeMs: endTime - startTime,
+    };
+  }
+
+  function resetSimulation(planner: PlannerName = selectedPlanner) {
+    setRobotPosition(defaultScenario.start);
+    setPlannerResult({
+      path: [],
+      visited: [],
+      success: false,
+    });
+    setVisibleVisited([]);
+    setVisiblePath([]);
+    setPlannedAlgorithm(null);
+    setIsAnimating(false);
+    setMetrics({
+      algorithm: planner,
+      pathLength: 0,
+      nodesVisited: 0,
+      currentStep: 0,
+      runtimeMs: 0,
+      status: "idle",
+    });
+  }
+
+  function handlePlannerChange(planner: PlannerName) {
+    setSelectedPlanner(planner);
+    resetSimulation(planner);
+  }
+
   function handlePlanPath() {
-    const result = runBfs(defaultScenario);
+    setMetrics((currentMetrics) => ({
+      ...currentMetrics,
+      algorithm: selectedPlanner,
+      status: "planning",
+    }));
+
+    const { result, runtimeMs } = runSelectedPlanner();
 
     setPlannerResult(result);
+    setPlannedAlgorithm(selectedPlanner);
     setVisibleVisited(result.visited);
     setVisiblePath(result.path);
 
     setMetrics({
+      algorithm: selectedPlanner,
       pathLength: result.path.length,
       nodesVisited: result.visited.length,
       currentStep: 0,
+      runtimeMs,
       status: result.success ? "complete" : "failed",
     });
   }
 
   function handleAnimate() {
-    const result =
-      plannerResult.path.length > 0 ? plannerResult : runBfs(defaultScenario);
+    const canUseExistingPlan =
+      plannerResult.path.length > 0 && plannedAlgorithm === selectedPlanner;
+
+    const plannerRun = canUseExistingPlan
+      ? {
+          result: plannerResult,
+          runtimeMs: metrics.runtimeMs,
+        }
+      : runSelectedPlanner();
+
+    const { result, runtimeMs } = plannerRun;
 
     if (!result.success || result.path.length === 0) {
       setMetrics({
+        algorithm: selectedPlanner,
         pathLength: 0,
         nodesVisited: result.visited.length,
         currentStep: 0,
+        runtimeMs,
         status: "failed",
       });
       return;
     }
 
+    setPlannerResult(result);
+    setPlannedAlgorithm(selectedPlanner);
     setIsAnimating(true);
     setVisibleVisited(result.visited);
     setVisiblePath(result.path);
 
     setMetrics({
+      algorithm: selectedPlanner,
       pathLength: result.path.length,
       nodesVisited: result.visited.length,
       currentStep: 0,
+      runtimeMs,
       status: "running",
     });
 
@@ -76,9 +158,11 @@ function App() {
       setRobotPosition(nextPosition);
 
       setMetrics({
+        algorithm: selectedPlanner,
         pathLength: result.path.length,
         nodesVisited: result.visited.length,
         currentStep: step,
+        runtimeMs,
         status: step === result.path.length - 1 ? "complete" : "running",
       });
 
@@ -89,24 +173,6 @@ function App() {
         setIsAnimating(false);
       }
     }, 180);
-  }
-
-  function handleReset() {
-    setRobotPosition(defaultScenario.start);
-    setPlannerResult({
-      path: [],
-      visited: [],
-      success: false,
-    });
-    setVisibleVisited([]);
-    setVisiblePath([]);
-    setIsAnimating(false);
-    setMetrics({
-      pathLength: 0,
-      nodesVisited: 0,
-      currentStep: 0,
-      status: "idle",
-    });
   }
 
   return (
@@ -128,8 +194,8 @@ function App() {
             <div>
               <h2>{defaultScenario.name}</h2>
               <p>
-                BFS path planning from start to goal through a simulated
-                warehouse environment.
+                Compare BFS and A* path planning through a simulated warehouse
+                environment.
               </p>
             </div>
           </div>
@@ -165,9 +231,11 @@ function App() {
 
         <aside className="side-panel">
           <ControlPanel
+            selectedPlanner={selectedPlanner}
+            onPlannerChange={handlePlannerChange}
             onPlanPath={handlePlanPath}
             onAnimate={handleAnimate}
-            onReset={handleReset}
+            onReset={() => resetSimulation()}
             isAnimating={isAnimating}
           />
 

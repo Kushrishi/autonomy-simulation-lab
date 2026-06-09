@@ -15,6 +15,11 @@ export default function MetricsPanel({ metrics }: MetricsPanelProps) {
       </div>
 
       <div className="metric-row">
+        <span>Algorithm</span>
+        <strong>{metrics.algorithm}</strong>
+      </div>
+
+      <div className="metric-row">
         <span>Path length</span>
         <strong>{metrics.pathLength}</strong>
       </div>
@@ -27,6 +32,11 @@ export default function MetricsPanel({ metrics }: MetricsPanelProps) {
       <div className="metric-row">
         <span>Current step</span>
         <strong>{metrics.currentStep}</strong>
+      </div>
+
+      <div className="metric-row">
+        <span>Runtime</span>
+        <strong>{metrics.runtimeMs.toFixed(2)} ms</strong>
       </div>
     </section>
   );

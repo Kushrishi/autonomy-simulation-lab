@@ -1,4 +1,8 @@
+import type { PlannerName } from "../simulation/types";
+
 type ControlPanelProps = {
+  selectedPlanner: PlannerName;
+  onPlannerChange: (planner: PlannerName) => void;
   onPlanPath: () => void;
   onAnimate: () => void;
   onReset: () => void;
@@ -6,6 +10,8 @@ type ControlPanelProps = {
 };
 
 export default function ControlPanel({
+  selectedPlanner,
+  onPlannerChange,
   onPlanPath,
   onAnimate,
   onReset,
@@ -14,6 +20,20 @@ export default function ControlPanel({
   return (
     <section className="panel">
       <h2>Controls</h2>
+
+      <label className="control-label" htmlFor="planner-select">
+        Path planner
+      </label>
+
+      <select
+        id="planner-select"
+        value={selectedPlanner}
+        disabled={isAnimating}
+        onChange={(event) => onPlannerChange(event.target.value as PlannerName)}
+      >
+        <option value="BFS">BFS</option>
+        <option value="A*">A*</option>
+      </select>
 
       <button onClick={onPlanPath} disabled={isAnimating}>
         Plan Path
@@ -26,7 +46,7 @@ export default function ControlPanel({
       <button onClick={onReset}>Reset</button>
 
       <div className="control-note">
-        Planner: <strong>BFS</strong>
+        Active planner: <strong>{selectedPlanner}</strong>
       </div>
     </section>
   );

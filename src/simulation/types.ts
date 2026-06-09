@@ -12,6 +12,8 @@ export type Scenario = {
   obstacles: Position[];
 };
 
+export type PlannerName = "BFS" | "A*";
+
 export type PlannerResult = {
   path: Position[];
   visited: Position[];
@@ -19,8 +21,10 @@ export type PlannerResult = {
 };
 
 export type SimulationMetrics = {
+  algorithm: PlannerName;
   pathLength: number;
   nodesVisited: number;
   currentStep: number;
+  runtimeMs: number;
   status: "idle" | "planning" | "running" | "complete" | "failed";
 };
