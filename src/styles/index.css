@@ -156,6 +156,16 @@ h1 {
   transition: background 0.2s ease, transform 0.2s ease, border-color 0.2s ease;
 }
 
+.grid-cell.terrain-rough {
+  background: rgba(245, 158, 11, 0.18);
+  border-color: rgba(245, 158, 11, 0.35);
+}
+
+.grid-cell.terrain-slow {
+  background: rgba(168, 85, 247, 0.18);
+  border-color: rgba(168, 85, 247, 0.35);
+}
+
 .grid-cell.visited {
   background: rgba(59, 130, 246, 0.2);
   border-color: rgba(96, 165, 250, 0.35);
@@ -276,6 +286,14 @@ h1 {
 
 .path-dot {
   background: #facc15;
+}
+
+.rough-dot {
+  background: #f59e0b;
+}
+
+.slow-dot {
+  background: #a855f7;
 }
 
 .measured-dot {
@@ -400,7 +418,7 @@ h1 {
 .comparison-header,
 .comparison-row {
   display: grid;
-  grid-template-columns: 0.9fr 0.7fr 0.9fr 1fr 1fr;
+  grid-template-columns: 0.9fr 0.55fr 0.65fr 0.75fr 0.85fr 0.85fr;
   gap: 8px;
   align-items: center;
 }
@@ -443,6 +461,7 @@ h1 {
 }
 
 @media (max-width: 700px) {
+
   .app-shell,
   .dashboard-grid {
     width: min(100% - 28px, 1080px);

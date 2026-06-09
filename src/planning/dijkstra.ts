@@ -1,5 +1,5 @@
 import type { PlannerResult, Position, Scenario } from "../simulation/types";
-import { calculatePathCost } from "../simulation/terrain";
+import { calculatePathCost, getMoveCost } from "../simulation/terrain";
 
 function samePosition(a: Position, b: Position): boolean {
   return a.row === b.row && a.col === b.col;
@@ -57,19 +57,49 @@ function rebuildPath(
   return path.reverse();
 }
 
-export function runBfs(scenario: Scenario): PlannerResult {
-  const queue: Position[] = [scenario.start];
+function getDistance(
+  distanceMap: Map<string, number>,
+  position: Position
+): number {
+  return distanceMap.get(positionKey(position)) ?? Number.POSITIVE_INFINITY;
+}
+
+function removeLowestDistance(
+  openSet: Position[],
+  distanceMap: Map<string, number>
+): Position {
+  let bestIndex = 0;
+
+  for (let index = 1; index < openSet.length; index++) {
+    if (
+      getDistance(distanceMap, openSet[index]) <
+      getDistance(distanceMap, openSet[bestIndex])
+    ) {
+      bestIndex = index;
+    }
+  }
+
+  return openSet.splice(bestIndex, 1)[0];
+}
+
+export function runDijkstra(scenario: Scenario): PlannerResult {
+  const openSet: Position[] = [scenario.start];
+  const closedSet = new Set<string>();
   const visited: Position[] = [];
-  const visitedSet = new Set<string>([positionKey(scenario.start)]);
   const cameFrom = new Map<string, Position>();
+  const distanceMap = new Map<string, number>();
 
-  while (queue.length > 0) {
-    const current = queue.shift();
+  distanceMap.set(positionKey(scenario.start), 0);
 
-    if (!current) {
-      break;
+  while (openSet.length > 0) {
+    const current = removeLowestDistance(openSet, distanceMap);
+    const currentKey = positionKey(current);
+
+    if (closedSet.has(currentKey)) {
+      continue;
     }
 
+    closedSet.add(currentKey);
     visited.push(current);
 
     if (samePosition(current, scenario.goal)) {
@@ -84,15 +114,23 @@ export function runBfs(scenario: Scenario): PlannerResult {
     }
 
     for (const neighbor of getNeighbors(current, scenario)) {
-      const key = positionKey(neighbor);
+      const neighborKey = positionKey(neighbor);
 
-      if (visitedSet.has(key)) {
+      if (closedSet.has(neighborKey)) {
         continue;
       }
 
-      visitedSet.add(key);
-      cameFrom.set(key, current);
-      queue.push(neighbor);
+      const newDistance =
+        getDistance(distanceMap, current) + getMoveCost(scenario, neighbor);
+
+      if (newDistance < getDistance(distanceMap, neighbor)) {
+        cameFrom.set(neighborKey, current);
+        distanceMap.set(neighborKey, newDistance);
+
+        if (!openSet.some((position) => samePosition(position, neighbor))) {
+          openSet.push(neighbor);
+        }
+      }
     }
   }
 

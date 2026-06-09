@@ -8,6 +8,13 @@ export type ContinuousPosition = {
   col: number;
 };
 
+export type TerrainType = "normal" | "rough" | "slow";
+
+export type TerrainCell = {
+  position: Position;
+  type: TerrainType;
+};
+
 export type Scenario = {
   name: string;
   rows: number;
@@ -15,14 +22,16 @@ export type Scenario = {
   start: Position;
   goal: Position;
   obstacles: Position[];
+  terrain?: TerrainCell[];
 };
 
-export type PlannerName = "BFS" | "A*";
+export type PlannerName = "BFS" | "A*" | "Dijkstra";
 
 export type PlannerResult = {
   path: Position[];
   visited: Position[];
   success: boolean;
+  pathCost: number;
 };
 
 export type SimulationMetrics = {
@@ -38,9 +47,10 @@ export type PlannerComparison = {
   algorithm: PlannerName;
   success: boolean;
   pathLength: number;
+  pathCost: number;
   nodesVisited: number;
   runtimeMs: number;
-  efficiencyScore: number;
+  directnessScore: number;
 };
 
 export type SensorDirection = "Up" | "Down" | "Left" | "Right";

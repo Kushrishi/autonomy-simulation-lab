@@ -20,7 +20,7 @@ export default function MetricsPanel({ metrics }: MetricsPanelProps) {
       </div>
 
       <div className="metric-row">
-        <span>Path length</span>
+        <span>Path steps</span>
         <strong>{metrics.pathLength}</strong>
       </div>
 

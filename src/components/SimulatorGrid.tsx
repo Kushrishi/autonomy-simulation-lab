@@ -5,6 +5,7 @@ import type {
   SensorReading,
 } from "../simulation/types";
 import { roundToGridCell } from "../localization/localization";
+import { getTerrainType } from "../simulation/terrain";
 
 type SimulatorGridProps = {
   scenario: Scenario;
@@ -84,9 +85,14 @@ export default function SimulatorGrid({
   for (let row = 0; row < scenario.rows; row++) {
     for (let col = 0; col < scenario.cols; col++) {
       const position = { row, col };
+      const terrainType = getTerrainType(scenario, position);
 
       let className = "grid-cell";
       let label = "";
+
+      if (terrainType !== "normal") {
+        className += ` terrain-${terrainType}`;
+      }
 
       if (isSensorCell(sensorReadings, position)) {
         className += " sensor";

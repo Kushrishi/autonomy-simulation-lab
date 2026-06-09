@@ -10,6 +10,7 @@ import { runBfs } from "./planning/bfs";
 import { defaultScenario, scenarios } from "./simulation/scenarios";
 import LocalizationPanel from "./components/LocalizationPanel";
 import TelemetryExportPanel from "./components/TelemetryExportPanel";
+import { runDijkstra } from "./planning/dijkstra";
 import {
   buildLocalizationSamples,
   calculateLocalizationMetrics,
@@ -40,6 +41,7 @@ function App() {
     path: [],
     visited: [],
     success: false,
+    pathCost: 0,
   });
 
   const [visibleVisited, setVisibleVisited] = useState<Position[]>([]);
@@ -75,22 +77,24 @@ function App() {
     [selectedScenario, robotPosition]
   );
   // Runs the currently selected path planner and measures its runtime.  
-  function runSelectedPlanner(
-    scenario: Scenario = selectedScenario
-  ): {
+  function runSelectedPlanner(planner: PlannerName = selectedPlanner): {
     result: PlannerResult;
     runtimeMs: number;
   } {
     const startTime = performance.now();
 
     const result =
-      selectedPlanner === "BFS" ? runBfs(scenario) : runAstar(scenario);
+      planner === "BFS"
+        ? runBfs(selectedScenario)
+        : planner === "A*"
+          ? runAstar(selectedScenario)
+          : runDijkstra(selectedScenario);
 
-    const endTime = performance.now();
+    const runtimeMs = performance.now() - startTime;
 
     return {
       result,
-      runtimeMs: endTime - startTime,
+      runtimeMs,
     };
   }
   // Resets robot position, planner output, visualization state, and telemetry.
@@ -105,6 +109,7 @@ function App() {
       path: [],
       visited: [],
       success: false,
+      pathCost: 0,
     });
     setVisibleVisited([]);
     setVisiblePath([]);
@@ -152,7 +157,7 @@ function App() {
 
     setMetrics({
       algorithm: selectedPlanner,
-      pathLength: result.path.length,
+      pathLength: Math.max(result.path.length - 1, 0),
       nodesVisited: result.visited.length,
       currentStep: 0,
       runtimeMs,
@@ -175,7 +180,7 @@ function App() {
 
     setMetrics({
       algorithm: selectedPlanner,
-      pathLength: result.path.length,
+      pathLength: Math.max(result.path.length - 1, 0),
       nodesVisited: result.visited.length,
       currentStep: 0,
       runtimeMs,
@@ -197,7 +202,7 @@ function App() {
 
       setMetrics({
         algorithm: selectedPlanner,
-        pathLength: result.path.length,
+        pathLength: Math.max(result.path.length - 1, 0),
         nodesVisited: result.visited.length,
         currentStep: visitedIndex,
         runtimeMs,
@@ -252,7 +257,7 @@ function App() {
 
     setMetrics({
       algorithm: selectedPlanner,
-      pathLength: result.path.length,
+      pathLength: Math.max(result.path.length - 1, 0),
       nodesVisited: result.visited.length,
       currentStep: 0,
       runtimeMs,
@@ -268,7 +273,7 @@ function App() {
       setLocalizationStep(step);
       setMetrics({
         algorithm: selectedPlanner,
-        pathLength: result.path.length,
+        pathLength: Math.max(result.path.length - 1, 0),
         nodesVisited: result.visited.length,
         currentStep: step,
         runtimeMs,
@@ -305,7 +310,7 @@ function App() {
               <div>
                 <h2>{selectedScenario.name}</h2>
                 <p>
-                  Compare BFS and A* path planning across configurable simulated
+                  Compare BFS, A*, and Dijkstra path planning across configurable weighted
                   navigation environments.
                 </p>
               </div>
@@ -338,6 +343,12 @@ function App() {
               </span>
               <span>
                 <i className="legend-dot path-dot"></i>Path
+              </span>
+              <span>
+                <i className="legend-dot rough-dot"></i>Rough
+              </span>
+              <span>
+                <i className="legend-dot slow-dot"></i>Slow
               </span>
             </div>
           </div>

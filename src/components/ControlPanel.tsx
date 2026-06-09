@@ -4,26 +4,28 @@ type ControlPanelProps = {
   scenarios: Scenario[];
   selectedScenarioName: string;
   selectedPlanner: PlannerName;
+  isAnimating: boolean;
   onScenarioChange: (scenarioName: string) => void;
   onPlannerChange: (planner: PlannerName) => void;
   onPlanPath: () => void;
   onVisualizeSearch: () => void;
   onAnimate: () => void;
   onReset: () => void;
-  isAnimating: boolean;
 };
+
+const plannerOptions: PlannerName[] = ["BFS", "A*", "Dijkstra"];
 
 export default function ControlPanel({
   scenarios,
   selectedScenarioName,
   selectedPlanner,
+  isAnimating,
   onScenarioChange,
   onPlannerChange,
   onPlanPath,
   onVisualizeSearch,
   onAnimate,
   onReset,
-  isAnimating,
 }: ControlPanelProps) {
   return (
     <section className="panel">
@@ -32,7 +34,6 @@ export default function ControlPanel({
       <label className="control-label" htmlFor="scenario-select">
         Scenario
       </label>
-
       <select
         id="scenario-select"
         value={selectedScenarioName}
@@ -49,36 +50,39 @@ export default function ControlPanel({
       <label className="control-label" htmlFor="planner-select">
         Path planner
       </label>
-
       <select
         id="planner-select"
         value={selectedPlanner}
         disabled={isAnimating}
         onChange={(event) => onPlannerChange(event.target.value as PlannerName)}
       >
-        <option value="BFS">BFS</option>
-        <option value="A*">A*</option>
+        {plannerOptions.map((planner) => (
+          <option key={planner} value={planner}>
+            {planner}
+          </option>
+        ))}
       </select>
 
-      <button onClick={onPlanPath} disabled={isAnimating}>
+      <button disabled={isAnimating} onClick={onPlanPath}>
         Plan Path
       </button>
 
-      <button onClick={onVisualizeSearch} disabled={isAnimating}>
+      <button disabled={isAnimating} onClick={onVisualizeSearch}>
         Visualize Search
       </button>
 
-      <button onClick={onAnimate} disabled={isAnimating}>
+      <button disabled={isAnimating} onClick={onAnimate}>
         Run Simulation
       </button>
 
-      <button onClick={onReset}>Reset</button>
+      <button disabled={isAnimating} onClick={onReset}>
+        Reset
+      </button>
 
-      <div className="control-note">
-        Scenario: <strong>{selectedScenarioName}</strong>
-        <br />
-        Active planner: <strong>{selectedPlanner}</strong>
-      </div>
+      <p className="control-note">
+        BFS treats all traversable cells equally. A* and Dijkstra use terrain
+        costs to plan lower-cost paths through rough and slow zones.
+      </p>
     </section>
   );
 }

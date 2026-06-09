@@ -1,61 +1,40 @@
 import type { PlannerResult, Position, Scenario } from "../simulation/types";
+import { calculatePathCost, getMoveCost } from "../simulation/terrain";
 import { manhattanDistance } from "./manhattan";
-
-function positionKey(position: Position): string {
-  return `${position.row},${position.col}`;
-}
 
 function samePosition(a: Position, b: Position): boolean {
   return a.row === b.row && a.col === b.col;
 }
 
-function isInsideGrid(position: Position, rows: number, cols: number): boolean {
+function positionKey(position: Position): string {
+  return `${position.row},${position.col}`;
+}
+
+function isInsideGrid(position: Position, scenario: Scenario): boolean {
   return (
     position.row >= 0 &&
-    position.row < rows &&
+    position.row < scenario.rows &&
     position.col >= 0 &&
-    position.col < cols
+    position.col < scenario.cols
   );
 }
 
-function isObstacle(position: Position, obstacles: Position[]): boolean {
-  return obstacles.some((obstacle) => samePosition(obstacle, position));
+function isObstacle(position: Position, scenario: Scenario): boolean {
+  return scenario.obstacles.some((obstacle) => samePosition(obstacle, position));
 }
 
-function getNeighbors(position: Position): Position[] {
-  return [
+function getNeighbors(position: Position, scenario: Scenario): Position[] {
+  const candidates = [
     { row: position.row - 1, col: position.col },
     { row: position.row + 1, col: position.col },
     { row: position.row, col: position.col - 1 },
     { row: position.row, col: position.col + 1 },
   ];
-}
 
-// If a position has no score yet, treat it as infinitely expensive.
-function getScore(scores: Map<string, number>, position: Position): number {
-  return scores.get(positionKey(position)) ?? Infinity;
-}
-
-// Selects the open cell with the lowest estimated total cost.
-// This is the main decision step in A*.
-function removeLowestFScore(
-  openSet: Position[],
-  fScore: Map<string, number>
-): Position {
-  let bestIndex = 0;
-  let bestScore = getScore(fScore, openSet[0]);
-
-  for (let i = 1; i < openSet.length; i++) {
-    const currentScore = getScore(fScore, openSet[i]);
-
-    if (currentScore < bestScore) {
-      bestScore = currentScore;
-      bestIndex = i;
-    }
-  }
-
-  const [bestPosition] = openSet.splice(bestIndex, 1);
-  return bestPosition;
+  return candidates.filter(
+    (candidate) =>
+      isInsideGrid(candidate, scenario) && !isObstacle(candidate, scenario)
+  );
 }
 
 function rebuildPath(
@@ -63,39 +42,61 @@ function rebuildPath(
   start: Position,
   goal: Position
 ): Position[] {
-  const path: Position[] = [];
+  const path = [goal];
   let current = goal;
 
   while (!samePosition(current, start)) {
-    path.push(current);
-
     const previous = cameFrom.get(positionKey(current));
 
     if (!previous) {
       return [];
     }
 
+    path.push(previous);
     current = previous;
   }
 
-  path.push(start);
-  path.reverse();
-
-  return path;
+  return path.reverse();
 }
 
-// A* search uses both the known distance from the start and a heuristic
-// estimate to the goal. In this grid, the heuristic is Manhattan distance.
+function getScore(scoreMap: Map<string, number>, position: Position): number {
+  return scoreMap.get(positionKey(position)) ?? Number.POSITIVE_INFINITY;
+}
+
+// Selects the open cell with the lowest A* score.
+// If two cells have the same fScore, the tie-breaker chooses the one
+// closer to the goal so A* behaves more goal-directed than Dijkstra.
+function removeLowestFScore(
+  openSet: Position[],
+  fScore: Map<string, number>,
+  goal: Position
+): Position {
+  let bestIndex = 0;
+
+  for (let index = 1; index < openSet.length; index++) {
+    const currentScore = getScore(fScore, openSet[index]);
+    const bestScore = getScore(fScore, openSet[bestIndex]);
+
+    const currentHeuristic = manhattanDistance(openSet[index], goal);
+    const bestHeuristic = manhattanDistance(openSet[bestIndex], goal);
+
+    if (
+      currentScore < bestScore ||
+      (currentScore === bestScore && currentHeuristic < bestHeuristic)
+    ) {
+      bestIndex = index;
+    }
+  }
+
+  return openSet.splice(bestIndex, 1)[0];
+}
+
 export function runAstar(scenario: Scenario): PlannerResult {
   const openSet: Position[] = [scenario.start];
-  const openSetKeys = new Set<string>([positionKey(scenario.start)]);
   const closedSet = new Set<string>();
-
   const visited: Position[] = [];
   const cameFrom = new Map<string, Position>();
 
-  // gScore = actual distance travelled from the start.
-  // fScore = gScore + estimated remaining distance to the goal.
   const gScore = new Map<string, number>();
   const fScore = new Map<string, number>();
 
@@ -106,60 +107,47 @@ export function runAstar(scenario: Scenario): PlannerResult {
   );
 
   while (openSet.length > 0) {
-    const current = removeLowestFScore(openSet, fScore);
+    const current = removeLowestFScore(openSet, fScore, scenario.goal);
     const currentKey = positionKey(current);
-
-    openSetKeys.delete(currentKey);
 
     if (closedSet.has(currentKey)) {
       continue;
     }
 
+    closedSet.add(currentKey);
     visited.push(current);
 
     if (samePosition(current, scenario.goal)) {
+      const path = rebuildPath(cameFrom, scenario.start, scenario.goal);
+
       return {
-        path: rebuildPath(cameFrom, scenario.start, scenario.goal),
+        path,
         visited,
         success: true,
+        pathCost: calculatePathCost(path, scenario),
       };
     }
 
-    closedSet.add(currentKey);
-
-    const neighbors = getNeighbors(current);
-
-    for (const neighbor of neighbors) {
+    for (const neighbor of getNeighbors(current, scenario)) {
       const neighborKey = positionKey(neighbor);
-
-      if (!isInsideGrid(neighbor, scenario.rows, scenario.cols)) {
-        continue;
-      }
-
-      if (isObstacle(neighbor, scenario.obstacles)) {
-        continue;
-      }
 
       if (closedSet.has(neighborKey)) {
         continue;
       }
 
-      // Each move has a cost of 1 in the current unweighted grid.
-      const tentativeGScore = getScore(gScore, current) + 1;
+      const tentativeGScore =
+        getScore(gScore, current) + getMoveCost(scenario, neighbor);
 
       if (tentativeGScore < getScore(gScore, neighbor)) {
         cameFrom.set(neighborKey, current);
         gScore.set(neighborKey, tentativeGScore);
-        // A* prioritizes cells that appear cheaper overall:
-        // actual cost so far + estimated cost to goal.
         fScore.set(
           neighborKey,
           tentativeGScore + manhattanDistance(neighbor, scenario.goal)
         );
 
-        if (!openSetKeys.has(neighborKey)) {
+        if (!openSet.some((position) => samePosition(position, neighbor))) {
           openSet.push(neighbor);
-          openSetKeys.add(neighborKey);
         }
       }
     }
@@ -169,5 +157,6 @@ export function runAstar(scenario: Scenario): PlannerResult {
     path: [],
     visited,
     success: false,
+    pathCost: 0,
   };
 }

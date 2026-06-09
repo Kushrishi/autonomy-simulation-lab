@@ -1,46 +1,55 @@
-import { runAstar } from "./astar";
-import { runBfs } from "./bfs";
 import type {
   PlannerComparison,
   PlannerName,
   PlannerResult,
   Scenario,
 } from "../simulation/types";
+import { runAstar } from "./astar";
+import { runBfs } from "./bfs";
+import { runDijkstra } from "./dijkstra";
 
-// A simple comparison metric for this simulator.
-// Higher values mean the planner found a path while exploring fewer cells.
-function calculateEfficiencyScore(result: PlannerResult): number {
+function getPathStepCount(result: PlannerResult): number {
+  if (!result.success || result.path.length === 0) {
+    return 0;
+  }
+
+  return Math.max(result.path.length - 1, 0);
+}
+
+function calculateDirectnessScore(result: PlannerResult): number {
   if (!result.success || result.visited.length === 0) {
     return 0;
   }
 
-  return (result.path.length / result.visited.length) * 100;
+  const pathSteps = getPathStepCount(result);
+
+  return (pathSteps / result.visited.length) * 100;
 }
 
-// Runs one planner on the selected scenario and records basic performance
-// metrics for the comparison dashboard.
 function measurePlanner(
   algorithm: PlannerName,
-  scenario: Scenario
+  scenario: Scenario,
+  runPlanner: (scenario: Scenario) => PlannerResult
 ): PlannerComparison {
   const startTime = performance.now();
-
-  const result = algorithm === "BFS" ? runBfs(scenario) : runAstar(scenario);
-
-  const endTime = performance.now();
+  const result = runPlanner(scenario);
+  const runtimeMs = performance.now() - startTime;
 
   return {
     algorithm,
     success: result.success,
-    pathLength: result.path.length,
+    pathLength: getPathStepCount(result),
+    pathCost: result.pathCost,
     nodesVisited: result.visited.length,
-    runtimeMs: endTime - startTime,
-    efficiencyScore: calculateEfficiencyScore(result),
+    runtimeMs,
+    directnessScore: calculateDirectnessScore(result),
   };
 }
 
-// Runs all supported planners on the same scenario so their behavior can be
-// compared side by side.
 export function comparePlanners(scenario: Scenario): PlannerComparison[] {
-  return [measurePlanner("BFS", scenario), measurePlanner("A*", scenario)];
+  return [
+    measurePlanner("BFS", scenario, runBfs),
+    measurePlanner("A*", scenario, runAstar),
+    measurePlanner("Dijkstra", scenario, runDijkstra),
+  ];
 }
