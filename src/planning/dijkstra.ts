@@ -1,5 +1,6 @@
 import type { PlannerResult, Position, Scenario } from "../simulation/types";
 import { calculatePathCost, getMoveCost } from "../simulation/terrain";
+import { MinPriorityQueue } from "./MinPriorityQueue";
 
 function samePosition(a: Position, b: Position): boolean {
   return a.row === b.row && a.col === b.col;
@@ -31,7 +32,8 @@ function getNeighbors(position: Position, scenario: Scenario): Position[] {
   ];
 
   return candidates.filter(
-    (candidate) => isInsideGrid(candidate, scenario) && !isObstacle(candidate, scenario)
+    (candidate) =>
+      isInsideGrid(candidate, scenario) && !isObstacle(candidate, scenario)
   );
 }
 
@@ -64,35 +66,23 @@ function getDistance(
   return distanceMap.get(positionKey(position)) ?? Number.POSITIVE_INFINITY;
 }
 
-function removeLowestDistance(
-  openSet: Position[],
-  distanceMap: Map<string, number>
-): Position {
-  let bestIndex = 0;
-
-  for (let index = 1; index < openSet.length; index++) {
-    if (
-      getDistance(distanceMap, openSet[index]) <
-      getDistance(distanceMap, openSet[bestIndex])
-    ) {
-      bestIndex = index;
-    }
-  }
-
-  return openSet.splice(bestIndex, 1)[0];
-}
-
 export function runDijkstra(scenario: Scenario): PlannerResult {
-  const openSet: Position[] = [scenario.start];
+  const openSet = new MinPriorityQueue<Position>();
   const closedSet = new Set<string>();
   const visited: Position[] = [];
   const cameFrom = new Map<string, Position>();
   const distanceMap = new Map<string, number>();
 
   distanceMap.set(positionKey(scenario.start), 0);
+  openSet.enqueue(scenario.start, 0);
 
-  while (openSet.length > 0) {
-    const current = removeLowestDistance(openSet, distanceMap);
+  while (!openSet.isEmpty()) {
+    const current = openSet.dequeue();
+
+    if (!current) {
+      break;
+    }
+
     const currentKey = positionKey(current);
 
     if (closedSet.has(currentKey)) {
@@ -126,10 +116,7 @@ export function runDijkstra(scenario: Scenario): PlannerResult {
       if (newDistance < getDistance(distanceMap, neighbor)) {
         cameFrom.set(neighborKey, current);
         distanceMap.set(neighborKey, newDistance);
-
-        if (!openSet.some((position) => samePosition(position, neighbor))) {
-          openSet.push(neighbor);
-        }
+        openSet.enqueue(neighbor, newDistance);
       }
     }
   }
