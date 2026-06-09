@@ -4,17 +4,17 @@
 
 **Live Demo:** https://kushrishi.github.io/autonomy-simulation-lab/
 
-An interactive robotics and autonomy simulation project focused on robot navigation, path planning, search visualization, sensor simulation, localization, telemetry export, and analysis.
+An interactive robotics and autonomy simulation project focused on robot navigation, path planning, search visualization, dynamic replanning, sensor simulation, GNSS-inspired localization, telemetry export, and offline analysis.
 
-This project is designed as a portfolio-focused engineering system that starts with a browser-based robot navigation simulator and expands toward more advanced autonomy, navigation, and GNSS-inspired concepts.
+This project is designed as a portfolio-focused engineering system for autonomy, navigation, and robotics software. It starts with a browser-based robot navigation simulator and expands into weighted planning, dynamic obstacles, sensor telemetry, range-based localization, and state-estimation concepts.
 
 ## Current Version
 
-The current version implements a visual grid-based autonomy simulator using React, TypeScript, and Vite.
+The current version implements a visual grid-based autonomy simulator using React, TypeScript, Vite, and Vitest.
 
 The simulator includes:
 
-* A 2D grid-based navigation environment
+* 2D grid-based robot navigation
 * Multiple configurable navigation scenarios
 * Interactive scenario editing
 * Start and goal position placement
@@ -24,25 +24,32 @@ The simulator includes:
 * Breadth-first search path planning
 * A* path planning with Manhattan distance
 * Dijkstra path planning for weighted terrain
+* Binary min-priority queue optimization for A* and Dijkstra
 * Planner selection between BFS, A*, and Dijkstra
 * Animated search expansion visualization
 * Final path visualization
 * Animated robot movement
-* Live telemetry metrics
+* Dynamic obstacle insertion during robot movement
+* Replanning from the robot's current position when the active route becomes blocked
+* Compact telemetry strip below the simulator grid
+* Live telemetry metrics panel
 * Cost-aware planner comparison dashboard
 * Four-direction range sensor simulation
 * Sensor ray visualization
 * Obstacle hit highlighting
 * Sensor telemetry panel
 * GNSS-inspired noisy localization simulation
-* True, measured, and estimated position tracking
+* Beacon-style range observations
+* Nonlinear range least-squares position estimation
+* Constant-velocity Kalman localization filter
+* True, measured, smoothed, range LS, and Kalman position tracking
 * Localization error metrics including RMSE
 * Telemetry export to JSON and CSV
 * Python analysis scripts for exported telemetry
-* Automated validation tests for planner and localization behavior
+* Automated validation tests for planner, localization, priority queue, and estimation behavior
 * GitHub Actions CI for automated test and build validation
 * GitHub Pages deployment for a live browser demo
-* Professional dark UI
+* Professional dark simulator UI
 
 ## Demo Scenarios
 
@@ -53,7 +60,9 @@ The simulator currently supports multiple test environments:
 * Obstacle Course Demo
 * Weighted Terrain Demo
 
-These scenarios allow BFS, A*, and Dijkstra to be tested across different obstacle layouts, terrain-cost patterns, and navigation conditions.
+These scenarios allow BFS, A*, and Dijkstra to be tested across different obstacle layouts, terrain-cost patterns, dynamic replanning conditions, and navigation behaviors.
+
+The **Weighted Terrain Demo** is especially useful for comparing shortest-step planning against terrain-cost-aware planning and for testing dynamic obstacle replanning.
 
 ## Interactive Scenario Editor
 
@@ -70,7 +79,7 @@ Editor tools include:
 
 The editor also supports custom scenario import and export. Users can export an edited scenario as a JSON file, then import it later to reload the same custom environment.
 
-When the grid is edited or a custom scenario is imported, stale path, search, telemetry, and localization state are reset so that new planner runs reflect the updated scenario.
+When the grid is edited or a custom scenario is imported, stale path, search, telemetry, dynamic obstacle, and localization state are reset so that new planner runs reflect the updated scenario.
 
 ## Path Planning
 
@@ -88,11 +97,15 @@ A* uses Manhattan distance as a heuristic to prioritize cells that appear closer
 
 In this project, A* uses terrain-aware movement cost for accumulated path cost and Manhattan distance for goal-directed search. This allows A* to find low-cost paths while often visiting fewer cells than Dijkstra.
 
+A* uses a binary min-priority queue to efficiently select the next lowest-score candidate cell from the open set.
+
 ### Dijkstra Search
 
 Dijkstra search computes the lowest-cost path through the grid using accumulated terrain movement cost.
 
 Unlike BFS, Dijkstra accounts for rough and slow terrain. Unlike A*, it does not use a heuristic, so it can explore more cells while still finding the lowest-cost route.
+
+Dijkstra also uses the shared binary min-priority queue implementation.
 
 ## Weighted Terrain
 
@@ -104,7 +117,22 @@ The simulator supports weighted terrain cells:
 
 BFS ignores terrain cost during planning, while A* and Dijkstra use terrain costs to find lower-cost routes.
 
-The Weighted Terrain Demo is designed to show the difference between shortest-step planning and cost-aware planning.
+The Weighted Terrain Demo is designed to show the difference between shortest-step planning and lowest-cost planning.
+
+## Dynamic Obstacle Replanning
+
+The simulator supports dynamic obstacle behavior during robot movement.
+
+When Dynamic Mode is enabled:
+
+1. The robot starts moving along the active planned path.
+2. A new obstacle is inserted on the active route.
+3. The simulator detects that the next route segment is blocked.
+4. The selected planner replans from the robot's current position.
+5. The robot continues to the goal if an alternate route exists.
+6. Telemetry updates the replan count and dynamic obstacle coordinate.
+
+This demonstrates a more realistic autonomy behavior than static path planning because the robot can respond to a changing environment.
 
 ## Planner Comparison
 
@@ -143,14 +171,51 @@ During robot movement, the system tracks:
 * True robot position
 * Noisy measured position
 * Smoothed estimated position
+* Range least-squares estimated position
+* Kalman estimated position
+* Range observations from fixed beacons
 * Current localization error
 * Average localization error
 * Maximum localization error
-* RMSE
+* RMSE metrics
 
-The measured position simulates noisy GNSS-style observations. The estimated position applies simple smoothing to reduce measurement noise.
+The localization model includes several estimation approaches.
 
-This is not intended to be a full GNSS least-squares solution or Kalman filter. It is an introductory localization simulation layer that connects path planning, noisy measurements, and error metrics.
+### Noisy Position Fixes
+
+The measured position simulates noisy position observations around the robot's true grid position.
+
+### Smoothed Estimate
+
+The smoothed estimate applies simple temporal smoothing to noisy position fixes. This provides a basic baseline for reducing measurement noise.
+
+### Range Least-Squares Estimate
+
+The range LS estimate uses beacon-style range observations from fixed beacon positions around the grid.
+
+The range model is an unweighted nonlinear parametric least-squares problem. The unknowns are the robot's row and column position, and the observations are noisy ranges to fixed beacons.
+
+The solver uses iterative Gauss-Newton updates to estimate position from range residuals.
+
+### Kalman Estimate
+
+The Kalman estimate applies a linear constant-velocity prediction/update filter to noisy position fixes.
+
+The state vector is:
+
+```text
+[row, col, row_velocity, col_velocity]
+```
+
+This is a standard linear Kalman filter for position measurements. It is not an extended Kalman filter and does not directly fuse nonlinear range observations.
+
+### Localization Scope
+
+This is a GNSS-inspired educational model, not a full production GNSS receiver.
+
+The current simulator intentionally omits real-world GNSS complexities such as satellite ephemerides, receiver clock bias, atmospheric delay, multipath, cycle slips, carrier phase ambiguity, satellite geometry dilution, and covariance-weighted measurement modeling.
+
+A future extension could add a range-based extended Kalman filter that directly fuses beacon-style range observations with a motion model.
 
 ## Telemetry Export
 
@@ -185,10 +250,19 @@ Current tests verify that:
 * BFS ignores terrain cost while A* and Dijkstra optimize weighted terrain cost
 * A* matches Dijkstra on weighted-cost optimality
 * Planners fail cleanly when the goal is blocked
+* The min-priority queue dequeues nodes in correct priority order
+* Priority queue tie-breaking behaves deterministically
 * Localization samples are generated correctly
 * RMSE is calculated consistently from localization error values
+* Range observations are generated for localization samples
+* Zero-noise range observations recover the true position
+* Range residuals are computed consistently
+* Noisy range estimates remain finite and reasonable
+* The Kalman filter initializes correctly
+* The Kalman filter updates toward new measurements
+* The Kalman filter learns velocity from repeated position updates
 
-GitHub Actions automatically runs the validation tests and production build on pushes and pull requests.
+GitHub Actions automatically runs validation tests and production build checks on pushes and pull requests.
 
 ## How It Works
 
@@ -198,7 +272,9 @@ The selected planner searches for a path from the start position to the goal whi
 
 The application can show the result instantly or animate the search process step by step.
 
-After a path is found, the robot can animate along the planned route while telemetry, sensor readings, and localization estimates update in real time.
+After a path is found, the robot can animate along the planned route while telemetry, sensor readings, localization estimates, and dynamic replanning state update in real time.
+
+If Dynamic Mode is enabled, a new obstacle can appear on the active route. The simulator then replans from the robot's current position and continues if a valid alternate route exists.
 
 ## Current Tech Stack
 
@@ -242,23 +318,49 @@ npm test
 For Windows PowerShell users who encounter npm script execution restrictions, use `npm.cmd` instead:
 
 ```powershell
+npm.cmd install
 npm.cmd run dev
 npm.cmd test
 npm.cmd run build
 ```
 
+The local development site uses the GitHub Pages base path:
+
+```text
+http://localhost:5173/autonomy-simulation-lab/
+```
+
+## Suggested Manual Demo
+
+A good manual test sequence is:
+
+1. Open the live demo or local development site.
+2. Select **Weighted Terrain Demo**.
+3. Select **A***.
+4. Turn **Dynamic Mode On**.
+5. Click **Run Simulation**.
+6. Watch the robot encounter a dynamic obstacle and replan.
+7. Confirm telemetry shows a replan count and dynamic obstacle coordinate.
+8. Review the planner comparison dashboard.
+9. Review the GNSS-inspired localization panel.
+
+This demo shows weighted path planning, dynamic replanning, telemetry, range sensing, and localization in one scenario.
+
 ## Planned Features
 
 Future versions may add:
 
-* Dynamic obstacles and replanning
+* Range-based extended Kalman filter
+* More realistic range sensor noise
+* Additional localization covariance metrics
+* Scenario validation utilities
 * Improved robot motion visualization
-* Noisy range sensor readings
-* More advanced localization filters
-* C++ path-planning benchmark module
 * Demo GIFs and screenshots
 * Architecture diagrams
-* Expanded validation tests
+* Expanded telemetry analysis notebooks
+* C++ path-planning benchmark module
+* Additional automated tests for dynamic replanning helpers
+* Refactoring of simulator state utilities for maintainability
 
 ## Portfolio Relevance
 
@@ -269,11 +371,14 @@ This project is intended to demonstrate skills relevant to:
 * Path planning
 * Search algorithm visualization
 * Weighted graph search
+* Dynamic obstacle replanning
 * Interactive simulation tooling
 * Custom scenario import/export
 * Sensor modeling
-* Localization
 * GNSS/navigation-inspired systems
+* Nonlinear least-squares estimation
+* Kalman filtering
+* Localization error analysis
 * Telemetry and metrics
 * Data export
 * Python-based data analysis
@@ -281,3 +386,11 @@ This project is intended to demonstrate skills relevant to:
 * Automated testing and CI
 * Web deployment
 * Engineering software architecture
+
+## Engineering Notes
+
+This project intentionally balances educational clarity with real autonomy concepts.
+
+BFS, A*, and Dijkstra are implemented directly so their behavior can be visualized and validated. A* and Dijkstra use a shared binary min-priority queue to make the weighted planners more algorithmically realistic.
+
+The localization system is also intentionally staged. It starts with noisy position fixes, adds basic smoothing, then adds range-based nonlinear least-squares estimation and a linear constant-velocity Kalman filter. This makes the limitations of each method visible and creates a foundation for future EKF-style range fusion.
