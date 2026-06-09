@@ -47,11 +47,13 @@ function App() {
     runtimeMs: 0,
     status: "idle",
   });
-
+  // Sensor readings are recalculated whenever the robot position or scenario
+  // changes, so the sensor panel updates during robot movement.
   const sensorReadings = useMemo(
   () => getRangeSensorReadings(selectedScenario, robotPosition, 5),
   [selectedScenario, robotPosition]
-);  
+);
+  // Runs the currently selected path planner and measures its runtime.  
   function runSelectedPlanner(
     scenario: Scenario = selectedScenario
   ): {
@@ -70,7 +72,7 @@ function App() {
       runtimeMs: endTime - startTime,
     };
   }
-
+  // Resets robot position, planner output, visualization state, and telemetry.
   function resetSimulation(
     planner: PlannerName = selectedPlanner,
     scenario: Scenario = selectedScenario
@@ -132,7 +134,8 @@ function App() {
       status: result.success ? "complete" : "failed",
     });
   }
-
+  // Animates the planner's search process by revealing visited cells one at a time
+  // before displaying the final path.
   function handleVisualizeSearch() {
     const { result, runtimeMs } = runSelectedPlanner();
 

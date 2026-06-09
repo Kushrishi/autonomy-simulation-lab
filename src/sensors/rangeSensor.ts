@@ -5,6 +5,8 @@ import type {
   SensorReading,
 } from "../simulation/types";
 
+// Each sensor direction maps to a row/column step.
+// For example, Up means row decreases by 1 each scan step.
 const directionSteps: Record<SensorDirection, Position> = {
   Up: { row: -1, col: 0 },
   Down: { row: 1, col: 0 },
@@ -29,6 +31,8 @@ function isObstacle(position: Position, scenario: Scenario): boolean {
   return scenario.obstacles.some((obstacle) => samePosition(obstacle, position));
 }
 
+// Scans outward from the robot in one direction until it reaches the sensor
+// range limit, an obstacle, or the edge of the grid.
 function scanDirection(
   scenario: Scenario,
   robotPosition: Position,
@@ -43,7 +47,7 @@ function scanDirection(
       row: robotPosition.row + step.row * distance,
       col: robotPosition.col + step.col * distance,
     };
-
+    // Stop scanning if the ray reaches the edge of the map.
     if (!isInsideGrid(nextPosition, scenario)) {
       return {
         direction,
@@ -54,7 +58,7 @@ function scanDirection(
     }
 
     cells.push(nextPosition);
-
+    // Stop scanning when the first obstacle is detected.
     if (isObstacle(nextPosition, scenario)) {
       return {
         direction,
@@ -73,7 +77,8 @@ function scanDirection(
     cells,
   };
 }
-
+// Simulates four simple range sensors mounted on the robot.
+// Each reading reports clear distance or the nearest obstacle in that direction.
 export function getRangeSensorReadings(
   scenario: Scenario,
   robotPosition: Position,

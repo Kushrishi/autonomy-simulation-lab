@@ -31,10 +31,13 @@ function getNeighbors(position: Position): Position[] {
   ];
 }
 
+// If a position has no score yet, treat it as infinitely expensive.
 function getScore(scores: Map<string, number>, position: Position): number {
   return scores.get(positionKey(position)) ?? Infinity;
 }
 
+// Selects the open cell with the lowest estimated total cost.
+// This is the main decision step in A*.
 function removeLowestFScore(
   openSet: Position[],
   fScore: Map<string, number>
@@ -81,6 +84,8 @@ function rebuildPath(
   return path;
 }
 
+// A* search uses both the known distance from the start and a heuristic
+// estimate to the goal. In this grid, the heuristic is Manhattan distance.
 export function runAstar(scenario: Scenario): PlannerResult {
   const openSet: Position[] = [scenario.start];
   const openSetKeys = new Set<string>([positionKey(scenario.start)]);
@@ -89,6 +94,8 @@ export function runAstar(scenario: Scenario): PlannerResult {
   const visited: Position[] = [];
   const cameFrom = new Map<string, Position>();
 
+  // gScore = actual distance travelled from the start.
+  // fScore = gScore + estimated remaining distance to the goal.
   const gScore = new Map<string, number>();
   const fScore = new Map<string, number>();
 
@@ -137,11 +144,14 @@ export function runAstar(scenario: Scenario): PlannerResult {
         continue;
       }
 
+      // Each move has a cost of 1 in the current unweighted grid.
       const tentativeGScore = getScore(gScore, current) + 1;
 
       if (tentativeGScore < getScore(gScore, neighbor)) {
         cameFrom.set(neighborKey, current);
         gScore.set(neighborKey, tentativeGScore);
+        // A* prioritizes cells that appear cheaper overall:
+        // actual cost so far + estimated cost to goal.
         fScore.set(
           neighborKey,
           tentativeGScore + manhattanDistance(neighbor, scenario.goal)

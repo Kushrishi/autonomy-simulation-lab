@@ -1,5 +1,7 @@
 import type { PlannerResult, Position, Scenario } from "../simulation/types";
 
+// Positions are converted into string keys so they can be stored reliably
+// in Sets and Maps. Example: { row: 2, col: 5 } becomes "2,5".
 function positionKey(position: Position): string {
   return `${position.row},${position.col}`;
 }
@@ -21,6 +23,8 @@ function isObstacle(position: Position, obstacles: Position[]): boolean {
   return obstacles.some((obstacle) => samePosition(obstacle, position));
 }
 
+// The robot can move in four grid directions: up, down, left, and right.
+// Diagonal motion is intentionally excluded for this first simulator version.
 function getNeighbors(position: Position): Position[] {
   return [
     { row: position.row - 1, col: position.col },
@@ -29,7 +33,8 @@ function getNeighbors(position: Position): Position[] {
     { row: position.row, col: position.col + 1 },
   ];
 }
-
+// Reconstructs the final path by walking backward from the goal to the start
+// using the cameFrom map, then reversing the result.
 function rebuildPath(
   cameFrom: Map<string, Position>,
   start: Position,
@@ -55,8 +60,14 @@ function rebuildPath(
 
   return path;
 }
-
+// Breadth-first search explores the grid outward from the start position.
+// Because every move has equal cost, BFS finds the shortest path in this
+// unweighted grid environment.
 export function runBfs(scenario: Scenario): PlannerResult {
+  // queue stores cells waiting to be explored.
+// visited is used for visualization.
+// visitedSet prevents repeated exploration.
+// cameFrom remembers the previous cell for path reconstruction.
   const queue: Position[] = [];
   const visited: Position[] = [];
   const visitedSet = new Set<string>();
