@@ -4,7 +4,7 @@
 
 **Live Demo:** https://kushrishi.github.io/autonomy-simulation-lab/
 
-**Latest Release:** v1.0.0 - Autonomy Simulation Lab
+**Latest Release:** [v1.0.0 - Autonomy Simulation Lab](https://github.com/Kushrishi/autonomy-simulation-lab/releases/tag/v1.0.0)
 
 **License:** MIT
 
