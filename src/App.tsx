@@ -4,15 +4,19 @@ import MetricsPanel from "./components/MetricsPanel";
 import SimulatorGrid from "./components/SimulatorGrid";
 import { runAstar } from "./planning/astar";
 import { runBfs } from "./planning/bfs";
-import { defaultScenario } from "./simulation/scenarios";
+import { defaultScenario, scenarios } from "./simulation/scenarios";
 import type {
   PlannerName,
   PlannerResult,
   Position,
+  Scenario,
   SimulationMetrics,
 } from "./simulation/types";
 
 function App() {
+  const [selectedScenario, setSelectedScenario] =
+    useState<Scenario>(defaultScenario);
+
   const [selectedPlanner, setSelectedPlanner] = useState<PlannerName>("BFS");
 
   const [plannedAlgorithm, setPlannedAlgorithm] =
@@ -41,16 +45,16 @@ function App() {
     status: "idle",
   });
 
-  function runSelectedPlanner(): {
+  function runSelectedPlanner(
+    scenario: Scenario = selectedScenario
+  ): {
     result: PlannerResult;
     runtimeMs: number;
   } {
     const startTime = performance.now();
 
     const result =
-      selectedPlanner === "BFS"
-        ? runBfs(defaultScenario)
-        : runAstar(defaultScenario);
+      selectedPlanner === "BFS" ? runBfs(scenario) : runAstar(scenario);
 
     const endTime = performance.now();
 
@@ -60,8 +64,11 @@ function App() {
     };
   }
 
-  function resetSimulation(planner: PlannerName = selectedPlanner) {
-    setRobotPosition(defaultScenario.start);
+  function resetSimulation(
+    planner: PlannerName = selectedPlanner,
+    scenario: Scenario = selectedScenario
+  ) {
+    setRobotPosition(scenario.start);
     setPlannerResult({
       path: [],
       visited: [],
@@ -81,9 +88,18 @@ function App() {
     });
   }
 
+  function handleScenarioChange(scenarioName: string) {
+    const nextScenario =
+      scenarios.find((scenario) => scenario.name === scenarioName) ??
+      defaultScenario;
+
+    setSelectedScenario(nextScenario);
+    resetSimulation(selectedPlanner, nextScenario);
+  }
+
   function handlePlannerChange(planner: PlannerName) {
     setSelectedPlanner(planner);
-    resetSimulation(planner);
+    resetSimulation(planner, selectedScenario);
   }
 
   function handlePlanPath() {
@@ -113,7 +129,7 @@ function App() {
   function handleVisualizeSearch() {
     const { result, runtimeMs } = runSelectedPlanner();
 
-    setRobotPosition(defaultScenario.start);
+    setRobotPosition(selectedScenario.start);
     setPlannerResult(result);
     setPlannedAlgorithm(selectedPlanner);
     setVisibleVisited([]);
@@ -235,7 +251,8 @@ function App() {
           <h1>Interactive Robot Navigation Simulator</h1>
           <p className="subtitle">
             A browser-based autonomy simulation for path planning, obstacle
-            avoidance, and future navigation/localization experiments.
+            avoidance, scenario testing, and future navigation/localization
+            experiments.
           </p>
         </div>
       </header>
@@ -244,16 +261,16 @@ function App() {
         <div className="simulator-card">
           <div className="card-header">
             <div>
-              <h2>{defaultScenario.name}</h2>
+              <h2>{selectedScenario.name}</h2>
               <p>
-                Compare BFS and A* path planning through a simulated warehouse
-                environment with animated search expansion.
+                Compare BFS and A* path planning across configurable simulated
+                navigation environments.
               </p>
             </div>
           </div>
 
           <SimulatorGrid
-            scenario={defaultScenario}
+            scenario={selectedScenario}
             robotPosition={robotPosition}
             path={visiblePath}
             visited={visibleVisited}
@@ -283,7 +300,10 @@ function App() {
 
         <aside className="side-panel">
           <ControlPanel
+            scenarios={scenarios}
+            selectedScenarioName={selectedScenario.name}
             selectedPlanner={selectedPlanner}
+            onScenarioChange={handleScenarioChange}
             onPlannerChange={handlePlannerChange}
             onPlanPath={handlePlanPath}
             onVisualizeSearch={handleVisualizeSearch}

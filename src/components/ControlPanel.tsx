@@ -1,7 +1,10 @@
-import type { PlannerName } from "../simulation/types";
+import type { PlannerName, Scenario } from "../simulation/types";
 
 type ControlPanelProps = {
+  scenarios: Scenario[];
+  selectedScenarioName: string;
   selectedPlanner: PlannerName;
+  onScenarioChange: (scenarioName: string) => void;
   onPlannerChange: (planner: PlannerName) => void;
   onPlanPath: () => void;
   onVisualizeSearch: () => void;
@@ -11,7 +14,10 @@ type ControlPanelProps = {
 };
 
 export default function ControlPanel({
+  scenarios,
+  selectedScenarioName,
   selectedPlanner,
+  onScenarioChange,
   onPlannerChange,
   onPlanPath,
   onVisualizeSearch,
@@ -22,6 +28,23 @@ export default function ControlPanel({
   return (
     <section className="panel">
       <h2>Controls</h2>
+
+      <label className="control-label" htmlFor="scenario-select">
+        Scenario
+      </label>
+
+      <select
+        id="scenario-select"
+        value={selectedScenarioName}
+        disabled={isAnimating}
+        onChange={(event) => onScenarioChange(event.target.value)}
+      >
+        {scenarios.map((scenario) => (
+          <option key={scenario.name} value={scenario.name}>
+            {scenario.name}
+          </option>
+        ))}
+      </select>
 
       <label className="control-label" htmlFor="planner-select">
         Path planner
@@ -52,6 +75,8 @@ export default function ControlPanel({
       <button onClick={onReset}>Reset</button>
 
       <div className="control-note">
+        Scenario: <strong>{selectedScenarioName}</strong>
+        <br />
         Active planner: <strong>{selectedPlanner}</strong>
       </div>
     </section>
