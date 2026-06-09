@@ -1,8 +1,10 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import ControlPanel from "./components/ControlPanel";
 import MetricsPanel from "./components/MetricsPanel";
 import PlannerComparisonPanel from "./components/PlannerComparisonPanel";
+import SensorPanel from "./components/SensorPanel";
 import SimulatorGrid from "./components/SimulatorGrid";
+import { getRangeSensorReadings } from "./sensors/rangeSensor";
 import { runAstar } from "./planning/astar";
 import { runBfs } from "./planning/bfs";
 import { defaultScenario, scenarios } from "./simulation/scenarios";
@@ -11,7 +13,7 @@ import type {
   PlannerResult,
   Position,
   Scenario,
-  SimulationMetrics,
+  SimulationMetrics,    
 } from "./simulation/types";
 
 function App() {
@@ -46,6 +48,10 @@ function App() {
     status: "idle",
   });
 
+  const sensorReadings = useMemo(
+  () => getRangeSensorReadings(selectedScenario, robotPosition, 5),
+  [selectedScenario, robotPosition]
+);  
   function runSelectedPlanner(
     scenario: Scenario = selectedScenario
   ): {
@@ -271,11 +277,12 @@ function App() {
           </div>
 
           <SimulatorGrid
-            scenario={selectedScenario}
-            robotPosition={robotPosition}
-            path={visiblePath}
-            visited={visibleVisited}
-          />
+  scenario={selectedScenario}
+  robotPosition={robotPosition}
+  path={visiblePath}
+  visited={visibleVisited}
+  sensorReadings={sensorReadings}
+/>
 
           <div className="legend">
             <span>
@@ -314,7 +321,10 @@ function App() {
           />
 
           <MetricsPanel metrics={metrics} />
-          <PlannerComparisonPanel scenario={selectedScenario} />
+
+<SensorPanel readings={sensorReadings} />
+
+<PlannerComparisonPanel scenario={selectedScenario} />
         </aside>
       </section>
     </main>

@@ -37,3 +37,13 @@ export type PlannerComparison = {
   runtimeMs: number;
   efficiencyScore: number;
 };
+
+export type SensorDirection = "Up" | "Down" | "Left" | "Right";
+
+export type SensorReading = {
+  direction: SensorDirection;
+  distance: number;
+  detectedObstacle: boolean;
+  cells: Position[];
+  obstaclePosition?: Position;
+};

@@ -1,10 +1,11 @@
-import type { Position, Scenario } from "../simulation/types";
+import type { Position, Scenario, SensorReading } from "../simulation/types";
 
 type SimulatorGridProps = {
   scenario: Scenario;
   robotPosition: Position;
   path: Position[];
   visited: Position[];
+  sensorReadings: SensorReading[];
 };
 
 function samePosition(a: Position, b: Position): boolean {
@@ -15,11 +16,32 @@ function containsPosition(list: Position[], position: Position): boolean {
   return list.some((item) => samePosition(item, position));
 }
 
+function isSensorCell(
+  sensorReadings: SensorReading[],
+  position: Position
+): boolean {
+  return sensorReadings.some((reading) =>
+    containsPosition(reading.cells, position)
+  );
+}
+
+function isSensorHit(
+  sensorReadings: SensorReading[],
+  position: Position
+): boolean {
+  return sensorReadings.some(
+    (reading) =>
+      reading.obstaclePosition &&
+      samePosition(reading.obstaclePosition, position)
+  );
+}
+
 export default function SimulatorGrid({
   scenario,
   robotPosition,
   path,
   visited,
+  sensorReadings,
 }: SimulatorGridProps) {
   const cells = [];
 
@@ -29,6 +51,14 @@ export default function SimulatorGrid({
 
       let className = "grid-cell";
       let label = "";
+
+      if (isSensorCell(sensorReadings, position)) {
+        className += " sensor";
+      }
+
+      if (isSensorHit(sensorReadings, position)) {
+        className += " sensor-hit";
+      }
 
       if (containsPosition(visited, position)) {
         className += " visited";
