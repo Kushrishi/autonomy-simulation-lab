@@ -12,6 +12,12 @@ import LocalizationPanel from "./components/LocalizationPanel";
 import TelemetryExportPanel from "./components/TelemetryExportPanel";
 import { runDijkstra } from "./planning/dijkstra";
 import {
+  buildScenarioWithDynamicObstacle,
+  chooseDynamicObstaclePosition,
+  createReplanningScenario,
+  positionListIncludes,
+} from "./simulation/dynamicObstacles";
+import {
   buildLocalizationSamples,
   calculateLocalizationMetrics,
 } from "./localization/localization";
@@ -224,71 +230,6 @@ function parseImportedScenario(value: unknown): Scenario | null {
           samePosition(obstacle, cell.position)
         )
     ),
-  };
-}
-
-function positionListIncludes(list: Position[], position: Position): boolean {
-  return list.some((item) => samePosition(item, position));
-}
-
-function buildScenarioWithDynamicObstacle(
-  scenario: Scenario,
-  dynamicObstaclePosition: Position | null
-): Scenario {
-  if (!dynamicObstaclePosition) {
-    return scenario;
-  }
-
-  if (positionListIncludes(scenario.obstacles, dynamicObstaclePosition)) {
-    return scenario;
-  }
-
-  return {
-    ...scenario,
-    obstacles: [...scenario.obstacles, dynamicObstaclePosition],
-    terrain: (scenario.terrain ?? []).filter(
-      (cell) => !samePosition(cell.position, dynamicObstaclePosition)
-    ),
-  };
-}
-
-function chooseDynamicObstaclePosition(
-  path: Position[],
-  currentStep: number,
-  scenario: Scenario
-): Position | null {
-  if (path.length < 5) {
-    return null;
-  }
-
-  if (currentStep < 1 || currentStep >= path.length - 2) {
-    return null;
-  }
-
-  const candidate = path[currentStep + 1];
-
-  if (!candidate) {
-    return null;
-  }
-
-  if (
-    samePosition(candidate, scenario.start) ||
-    samePosition(candidate, scenario.goal) ||
-    positionListIncludes(scenario.obstacles, candidate)
-  ) {
-    return null;
-  }
-
-  return candidate;
-}
-
-function createReplanningScenario(
-  scenario: Scenario,
-  currentPosition: Position
-): Scenario {
-  return {
-    ...scenario,
-    start: currentPosition,
   };
 }
 
