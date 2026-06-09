@@ -6,7 +6,7 @@
 
 An interactive robotics and autonomy simulation project focused on robot navigation, path planning, search visualization, sensor simulation, localization, telemetry export, and analysis.
 
-This project is designed as a portfolio-focused engineering system that starts with a browser-based robot navigation simulator and gradually expands into more advanced autonomy, navigation, and GNSS-inspired concepts.
+This project is designed as a portfolio-focused engineering system that starts with a browser-based robot navigation simulator and expands toward more advanced autonomy, navigation, and GNSS-inspired concepts.
 
 ## Current Version
 
@@ -15,10 +15,11 @@ The current version implements a visual grid-based autonomy simulator using Reac
 The simulator includes:
 
 * A 2D grid-based navigation environment
-* Start and goal positions
-* Obstacle cells
-* Rough and slow weighted terrain cells
 * Multiple configurable navigation scenarios
+* Interactive scenario editing
+* Start and goal position placement
+* Obstacle placement and removal
+* Rough and slow weighted terrain cells
 * Breadth-first search path planning
 * A* path planning with Manhattan distance
 * Dijkstra path planning for weighted terrain
@@ -38,6 +39,8 @@ The simulator includes:
 * Telemetry export to JSON and CSV
 * Python analysis scripts for exported telemetry
 * Automated validation tests for planner and localization behavior
+* GitHub Actions CI for automated test and build validation
+* GitHub Pages deployment for a live browser demo
 * Professional dark UI
 
 ## Demo Scenarios
@@ -51,21 +54,36 @@ The simulator currently supports multiple test environments:
 
 These scenarios allow BFS, A*, and Dijkstra to be tested across different obstacle layouts, terrain-cost patterns, and navigation conditions.
 
+## Interactive Scenario Editor
+
+The simulator includes an interactive scenario editor that allows users to modify the navigation environment directly from the browser.
+
+Editor tools include:
+
+* Start position placement
+* Goal position placement
+* Obstacle placement and removal
+* Rough terrain placement and removal
+* Slow terrain placement and removal
+* Cell clearing
+
+When the grid is edited, stale path, search, telemetry, and localization state are reset so that new planner runs reflect the updated scenario.
+
 ## Path Planning
 
 The project currently supports three path-planning algorithms.
 
 ### Breadth-First Search
 
-BFS explores the grid outward from the start position and finds the shortest path by number of steps in an unweighted grid. In this simulator, BFS treats all traversable cells equally, so it does not optimize for terrain cost.
+BFS explores the grid outward from the start position and finds the shortest path by number of steps in an unweighted grid.
 
-BFS is useful for demonstrating complete search behavior, but it often explores many cells before reaching the goal.
+In this simulator, BFS treats all traversable cells equally, so it does not optimize for terrain cost. BFS is useful for demonstrating complete search behavior, but it can explore many cells before reaching the goal.
 
 ### A* Search
 
 A* uses Manhattan distance as a heuristic to prioritize cells that appear closer to the goal.
 
-In this project, A* uses terrain-aware movement cost for accumulated path cost and Manhattan distance for goal-directed search. This allows A* to find low-cost paths while often visiting far fewer cells than Dijkstra.
+In this project, A* uses terrain-aware movement cost for accumulated path cost and Manhattan distance for goal-directed search. This allows A* to find low-cost paths while often visiting fewer cells than Dijkstra.
 
 ### Dijkstra Search
 
@@ -81,7 +99,7 @@ The simulator supports weighted terrain cells:
 * Rough terrain: increased movement cost
 * Slow terrain: high movement cost
 
-BFS ignores these costs during planning, while A* and Dijkstra use them to find lower-cost routes.
+BFS ignores terrain cost during planning, while A* and Dijkstra use terrain costs to find lower-cost routes.
 
 The Weighted Terrain Demo is designed to show the difference between shortest-step planning and cost-aware planning.
 
@@ -167,7 +185,7 @@ Current tests verify that:
 * Localization samples are generated correctly
 * RMSE is calculated consistently from localization error values
 
-These tests help verify that the core algorithm behavior is correct as the project grows.
+GitHub Actions automatically runs the validation tests and production build on pushes and pull requests.
 
 ## How It Works
 
@@ -186,6 +204,8 @@ After a path is found, the robot can animate along the planned route while telem
 * Vite
 * CSS
 * Vitest
+* GitHub Actions
+* GitHub Pages
 * Python
 * Pandas
 * Matplotlib
@@ -216,19 +236,27 @@ Run validation tests:
 npm test
 ```
 
+For Windows PowerShell users who encounter npm script execution restrictions, use `npm.cmd` instead:
+
+```powershell
+npm.cmd run dev
+npm.cmd test
+npm.cmd run build
+```
+
 ## Planned Features
 
 Future versions may add:
 
-* Interactive scenario editing
+* Save and load custom scenarios
 * Dynamic obstacles and replanning
 * Improved robot motion visualization
 * Noisy range sensor readings
 * More advanced localization filters
 * C++ path-planning benchmark module
-* GitHub Pages live demo
 * Demo GIFs and screenshots
-* Expanded README documentation with architecture diagrams
+* Architecture diagrams
+* Expanded validation tests
 
 ## Portfolio Relevance
 
@@ -239,6 +267,7 @@ This project is intended to demonstrate skills relevant to:
 * Path planning
 * Search algorithm visualization
 * Weighted graph search
+* Interactive simulation tooling
 * Sensor modeling
 * Localization
 * GNSS/navigation-inspired systems
@@ -246,4 +275,6 @@ This project is intended to demonstrate skills relevant to:
 * Data export
 * Python-based data analysis
 * Algorithm validation
+* Automated testing and CI
+* Web deployment
 * Engineering software architecture
