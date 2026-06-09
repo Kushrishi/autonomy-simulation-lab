@@ -28,3 +28,12 @@ export type SimulationMetrics = {
   runtimeMs: number;
   status: "idle" | "planning" | "searching" | "running" | "complete" | "failed";
 };
+
+export type PlannerComparison = {
+  algorithm: PlannerName;
+  success: boolean;
+  pathLength: number;
+  nodesVisited: number;
+  runtimeMs: number;
+  efficiencyScore: number;
+};

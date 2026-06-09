@@ -284,3 +284,43 @@ h1 {
     grid-template-columns: 1fr;
   }
 }
+.comparison-table {
+  display: grid;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.comparison-header,
+.comparison-row {
+  display: grid;
+  grid-template-columns: 0.9fr 0.7fr 0.9fr 1fr 1fr;
+  gap: 8px;
+  align-items: center;
+}
+
+.comparison-header {
+  color: #94a3b8;
+  font-size: 0.74rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.comparison-row {
+  padding: 10px;
+  border-radius: 12px;
+  background: rgba(30, 41, 59, 0.72);
+  color: #cbd5e1;
+  font-size: 0.82rem;
+}
+
+.comparison-row strong {
+  color: #f8fafc;
+}
+
+.panel-note {
+  margin: 14px 0 0;
+  color: #94a3b8;
+  font-size: 0.82rem;
+  line-height: 1.5;
+}

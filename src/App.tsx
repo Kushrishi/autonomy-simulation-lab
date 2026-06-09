@@ -1,6 +1,7 @@
 import { useState } from "react";
 import ControlPanel from "./components/ControlPanel";
 import MetricsPanel from "./components/MetricsPanel";
+import PlannerComparisonPanel from "./components/PlannerComparisonPanel";
 import SimulatorGrid from "./components/SimulatorGrid";
 import { runAstar } from "./planning/astar";
 import { runBfs } from "./planning/bfs";
@@ -313,6 +314,7 @@ function App() {
           />
 
           <MetricsPanel metrics={metrics} />
+          <PlannerComparisonPanel scenario={selectedScenario} />
         </aside>
       </section>
     </main>
