@@ -1,4 +1,10 @@
-import type { Position, Scenario, SensorReading } from "../simulation/types";
+import type {
+  LocalizationSample,
+  Position,
+  Scenario,
+  SensorReading,
+} from "../simulation/types";
+import { roundToGridCell } from "../localization/localization";
 
 type SimulatorGridProps = {
   scenario: Scenario;
@@ -6,6 +12,7 @@ type SimulatorGridProps = {
   path: Position[];
   visited: Position[];
   sensorReadings: SensorReading[];
+  localizationSample?: LocalizationSample;
 };
 
 function samePosition(a: Position, b: Position): boolean {
@@ -36,12 +43,41 @@ function isSensorHit(
   );
 }
 
+function isMeasuredPosition(
+  localizationSample: LocalizationSample | undefined,
+  position: Position
+): boolean {
+  if (!localizationSample) {
+    return false;
+  }
+
+  return samePosition(
+    roundToGridCell(localizationSample.measuredPosition),
+    position
+  );
+}
+
+function isEstimatedPosition(
+  localizationSample: LocalizationSample | undefined,
+  position: Position
+): boolean {
+  if (!localizationSample) {
+    return false;
+  }
+
+  return samePosition(
+    roundToGridCell(localizationSample.estimatedPosition),
+    position
+  );
+}
+
 export default function SimulatorGrid({
   scenario,
   robotPosition,
   path,
   visited,
   sensorReadings,
+  localizationSample,
 }: SimulatorGridProps) {
   const cells = [];
 
@@ -66,6 +102,16 @@ export default function SimulatorGrid({
 
       if (containsPosition(path, position)) {
         className += " path";
+      }
+
+      if (isMeasuredPosition(localizationSample, position)) {
+        className += " measured-position";
+        label = "M";
+      }
+
+      if (isEstimatedPosition(localizationSample, position)) {
+        className += " estimated-position";
+        label = "E";
       }
 
       if (containsPosition(scenario.obstacles, position)) {

@@ -8,12 +8,18 @@ import { getRangeSensorReadings } from "./sensors/rangeSensor";
 import { runAstar } from "./planning/astar";
 import { runBfs } from "./planning/bfs";
 import { defaultScenario, scenarios } from "./simulation/scenarios";
+import LocalizationPanel from "./components/LocalizationPanel";
+import {
+  buildLocalizationSamples,
+  calculateLocalizationMetrics,
+} from "./localization/localization";
 import type {
   PlannerName,
   PlannerResult,
   Position,
   Scenario,
-  SimulationMetrics,    
+  SimulationMetrics,
+  LocalizationSample,    
 } from "./simulation/types";
 
 function App() {
@@ -47,6 +53,20 @@ function App() {
     runtimeMs: 0,
     status: "idle",
   });
+  
+  const [localizationSamples, setLocalizationSamples] = useState<
+  LocalizationSample[]
+>([]);
+
+const [localizationStep, setLocalizationStep] = useState(0);
+
+const currentLocalizationSample = localizationSamples[localizationStep];
+
+const localizationMetrics = calculateLocalizationMetrics(
+  localizationSamples,
+  localizationStep
+);
+
   // Sensor readings are recalculated whenever the robot position or scenario
   // changes, so the sensor panel updates during robot movement.
   const sensorReadings = useMemo(
@@ -77,6 +97,8 @@ function App() {
     planner: PlannerName = selectedPlanner,
     scenario: Scenario = selectedScenario
   ) {
+    setLocalizationSamples([]);
+    setLocalizationStep(0);
     setRobotPosition(scenario.start);
     setPlannerResult({
       path: [],
@@ -112,6 +134,8 @@ function App() {
   }
 
   function handlePlanPath() {
+    setLocalizationSamples([]);
+    setLocalizationStep(0);
     setMetrics((currentMetrics) => ({
       ...currentMetrics,
       algorithm: selectedPlanner,
@@ -137,6 +161,8 @@ function App() {
   // Animates the planner's search process by revealing visited cells one at a time
   // before displaying the final path.
   function handleVisualizeSearch() {
+    setLocalizationSamples([]);
+    setLocalizationStep(0);
     const { result, runtimeMs } = runSelectedPlanner();
 
     setRobotPosition(selectedScenario.start);
@@ -187,7 +213,8 @@ function App() {
       }
     }, 18);
   }
-
+  // Animates the robot along the planned path. If no current plan exists,
+  // the selected planner is run first.
   function handleAnimate() {
     const canUseExistingPlan =
       plannerResult.path.length > 0 && plannedAlgorithm === selectedPlanner;
@@ -200,6 +227,7 @@ function App() {
       : runSelectedPlanner();
 
     const { result, runtimeMs } = plannerRun;
+    const nextLocalizationSamples = buildLocalizationSamples(result.path);
 
     if (!result.success || result.path.length === 0) {
       setMetrics({
@@ -218,6 +246,8 @@ function App() {
     setIsAnimating(true);
     setVisibleVisited(result.visited);
     setVisiblePath(result.path);
+    setLocalizationSamples(nextLocalizationSamples);
+    setLocalizationStep(0);
 
     setMetrics({
       algorithm: selectedPlanner,
@@ -234,7 +264,7 @@ function App() {
       const nextPosition = result.path[step];
 
       setRobotPosition(nextPosition);
-
+      setLocalizationStep(step);
       setMetrics({
         algorithm: selectedPlanner,
         pathLength: result.path.length,
@@ -285,6 +315,7 @@ function App() {
   path={visiblePath}
   visited={visibleVisited}
   sensorReadings={sensorReadings}
+  localizationSample={currentLocalizationSample}
 />
 
           <div className="legend">
@@ -326,7 +357,10 @@ function App() {
           <MetricsPanel metrics={metrics} />
 
 <SensorPanel readings={sensorReadings} />
-
+<LocalizationPanel
+  sample={currentLocalizationSample}
+  metrics={localizationMetrics}
+/>
 <PlannerComparisonPanel scenario={selectedScenario} />
         </aside>
       </section>

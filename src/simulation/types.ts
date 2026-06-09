@@ -3,6 +3,11 @@ export type Position = {
   col: number;
 };
 
+export type ContinuousPosition = {
+  row: number;
+  col: number;
+};
+
 export type Scenario = {
   name: string;
   rows: number;
@@ -46,4 +51,20 @@ export type SensorReading = {
   detectedObstacle: boolean;
   cells: Position[];
   obstaclePosition?: Position;
+};
+
+export type LocalizationSample = {
+  step: number;
+  truePosition: ContinuousPosition;
+  measuredPosition: ContinuousPosition;
+  estimatedPosition: ContinuousPosition;
+  error: number;
+};
+
+export type LocalizationMetrics = {
+  currentError: number;
+  averageError: number;
+  maxError: number;
+  rmse: number;
+  sampleCount: number;
 };
