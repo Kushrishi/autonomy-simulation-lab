@@ -333,6 +333,37 @@ h1 {
   margin-top: 9px;
 }
 
+.editor-tools {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.editor-tool-button {
+  border: 1px solid transparent;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease,
+    transform 0.15s ease;
+}
+
+.editor-tool-button:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+.active-editor-tool {
+  border-color: #facc15;
+  box-shadow: 0 0 0 2px rgba(250, 204, 21, 0.25);
+}
+
+.grid-cell {
+  cursor: pointer;
+}
+
+.grid-cell:hover {
+  outline: 2px solid rgba(250, 204, 21, 0.6);
+  outline-offset: -2px;
+}
+
 .metric-row {
   display: flex;
   justify-content: space-between;

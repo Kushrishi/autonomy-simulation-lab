@@ -509,7 +509,8 @@ function App() {
                   (tool) => (
                     <button
                       key={tool}
-                      className={selectedEditorTool === tool ? "active" : ""}
+                      className={`editor-tool-button ${selectedEditorTool === tool ? "active-editor-tool" : ""
+                        }`}
                       disabled={isAnimating}
                       onClick={() => setSelectedEditorTool(tool)}
                     >
