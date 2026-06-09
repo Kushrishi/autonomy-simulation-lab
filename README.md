@@ -1,5 +1,7 @@
 # Autonomy Simulation Lab
 
+![CI](https://github.com/Kushrishi/autonomy-simulation-lab/actions/workflows/ci.yml/badge.svg)
+
 An interactive robotics and autonomy simulation project focused on robot navigation, path planning, search visualization, sensor simulation, localization, telemetry export, and analysis.
 
 This project is designed as a portfolio-focused engineering system that starts with a browser-based robot navigation simulator and gradually expands into more advanced autonomy, navigation, and GNSS-inspired concepts.
