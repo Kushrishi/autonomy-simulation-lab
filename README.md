@@ -20,6 +20,7 @@ The simulator includes:
 * Start and goal position placement
 * Obstacle placement and removal
 * Rough and slow weighted terrain cells
+* Custom scenario export and import using JSON files
 * Breadth-first search path planning
 * A* path planning with Manhattan distance
 * Dijkstra path planning for weighted terrain
@@ -67,7 +68,9 @@ Editor tools include:
 * Slow terrain placement and removal
 * Cell clearing
 
-When the grid is edited, stale path, search, telemetry, and localization state are reset so that new planner runs reflect the updated scenario.
+The editor also supports custom scenario import and export. Users can export an edited scenario as a JSON file, then import it later to reload the same custom environment.
+
+When the grid is edited or a custom scenario is imported, stale path, search, telemetry, and localization state are reset so that new planner runs reflect the updated scenario.
 
 ## Path Planning
 
@@ -248,7 +251,6 @@ npm.cmd run build
 
 Future versions may add:
 
-* Save and load custom scenarios
 * Dynamic obstacles and replanning
 * Improved robot motion visualization
 * Noisy range sensor readings
@@ -268,6 +270,7 @@ This project is intended to demonstrate skills relevant to:
 * Search algorithm visualization
 * Weighted graph search
 * Interactive simulation tooling
+* Custom scenario import/export
 * Sensor modeling
 * Localization
 * GNSS/navigation-inspired systems
