@@ -26,5 +26,5 @@ export type SimulationMetrics = {
   nodesVisited: number;
   currentStep: number;
   runtimeMs: number;
-  status: "idle" | "planning" | "running" | "complete" | "failed";
+  status: "idle" | "planning" | "searching" | "running" | "complete" | "failed";
 };

@@ -4,6 +4,7 @@ type ControlPanelProps = {
   selectedPlanner: PlannerName;
   onPlannerChange: (planner: PlannerName) => void;
   onPlanPath: () => void;
+  onVisualizeSearch: () => void;
   onAnimate: () => void;
   onReset: () => void;
   isAnimating: boolean;
@@ -13,6 +14,7 @@ export default function ControlPanel({
   selectedPlanner,
   onPlannerChange,
   onPlanPath,
+  onVisualizeSearch,
   onAnimate,
   onReset,
   isAnimating,
@@ -37,6 +39,10 @@ export default function ControlPanel({
 
       <button onClick={onPlanPath} disabled={isAnimating}>
         Plan Path
+      </button>
+
+      <button onClick={onVisualizeSearch} disabled={isAnimating}>
+        Visualize Search
       </button>
 
       <button onClick={onAnimate} disabled={isAnimating}>

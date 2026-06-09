@@ -110,6 +110,58 @@ function App() {
     });
   }
 
+  function handleVisualizeSearch() {
+    const { result, runtimeMs } = runSelectedPlanner();
+
+    setRobotPosition(defaultScenario.start);
+    setPlannerResult(result);
+    setPlannedAlgorithm(selectedPlanner);
+    setVisibleVisited([]);
+    setVisiblePath([]);
+    setIsAnimating(true);
+
+    setMetrics({
+      algorithm: selectedPlanner,
+      pathLength: result.path.length,
+      nodesVisited: result.visited.length,
+      currentStep: 0,
+      runtimeMs,
+      status: result.success ? "searching" : "failed",
+    });
+
+    if (!result.success) {
+      setVisibleVisited(result.visited);
+      setIsAnimating(false);
+      return;
+    }
+
+    let visitedIndex = 0;
+
+    const searchIntervalId = window.setInterval(() => {
+      const nextVisitedCells = result.visited.slice(0, visitedIndex + 1);
+
+      setVisibleVisited(nextVisitedCells);
+
+      setMetrics({
+        algorithm: selectedPlanner,
+        pathLength: result.path.length,
+        nodesVisited: result.visited.length,
+        currentStep: visitedIndex,
+        runtimeMs,
+        status:
+          visitedIndex === result.visited.length - 1 ? "complete" : "searching",
+      });
+
+      visitedIndex++;
+
+      if (visitedIndex >= result.visited.length) {
+        window.clearInterval(searchIntervalId);
+        setVisiblePath(result.path);
+        setIsAnimating(false);
+      }
+    }, 18);
+  }
+
   function handleAnimate() {
     const canUseExistingPlan =
       plannerResult.path.length > 0 && plannedAlgorithm === selectedPlanner;
@@ -152,7 +204,7 @@ function App() {
 
     let step = 0;
 
-    const intervalId = window.setInterval(() => {
+    const movementIntervalId = window.setInterval(() => {
       const nextPosition = result.path[step];
 
       setRobotPosition(nextPosition);
@@ -169,7 +221,7 @@ function App() {
       step++;
 
       if (step >= result.path.length) {
-        window.clearInterval(intervalId);
+        window.clearInterval(movementIntervalId);
         setIsAnimating(false);
       }
     }, 180);
@@ -195,7 +247,7 @@ function App() {
               <h2>{defaultScenario.name}</h2>
               <p>
                 Compare BFS and A* path planning through a simulated warehouse
-                environment.
+                environment with animated search expansion.
               </p>
             </div>
           </div>
@@ -234,6 +286,7 @@ function App() {
             selectedPlanner={selectedPlanner}
             onPlannerChange={handlePlannerChange}
             onPlanPath={handlePlanPath}
+            onVisualizeSearch={handleVisualizeSearch}
             onAnimate={handleAnimate}
             onReset={() => resetSimulation()}
             isAnimating={isAnimating}
