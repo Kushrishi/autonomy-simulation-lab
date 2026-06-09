@@ -285,97 +285,101 @@ function App() {
   }
 
   return (
-    <main className="app-shell">
-      <header className="hero">
-        <div>
-          <p className="eyebrow">Autonomy Simulation Lab</p>
-          <h1>Interactive Robot Navigation Simulator</h1>
-          <p className="subtitle">
-            A browser-based autonomy simulation for path planning, obstacle
-            avoidance, scenario testing, and future navigation/localization
-            experiments.
-          </p>
-        </div>
-      </header>
+    <>
+      <main className="app-shell">
+        <header className="hero">
+          <div>
+            <p className="eyebrow">Autonomy Simulation Lab</p>
+            <h1>Interactive Robot Navigation Simulator</h1>
+            <p className="subtitle">
+              A browser-based autonomy simulation for path planning, obstacle
+              avoidance, scenario testing, and future navigation/localization
+              experiments.
+            </p>
+          </div>
+        </header>
 
-      <section className="dashboard">
-        <div className="simulator-card">
-          <div className="card-header">
-            <div>
-              <h2>{selectedScenario.name}</h2>
-              <p>
-                Compare BFS and A* path planning across configurable simulated
-                navigation environments.
-              </p>
+        <section className="dashboard">
+          <div className="simulator-card">
+            <div className="card-header">
+              <div>
+                <h2>{selectedScenario.name}</h2>
+                <p>
+                  Compare BFS and A* path planning across configurable simulated
+                  navigation environments.
+                </p>
+              </div>
+            </div>
+
+            <SimulatorGrid
+              scenario={selectedScenario}
+              robotPosition={robotPosition}
+              path={visiblePath}
+              visited={visibleVisited}
+              sensorReadings={sensorReadings}
+              localizationSample={currentLocalizationSample}
+            />
+
+            <div className="legend">
+              <span>
+                <i className="legend-dot robot-dot"></i>Robot
+              </span>
+              <span>
+                <i className="legend-dot start-dot"></i>Start
+              </span>
+              <span>
+                <i className="legend-dot goal-dot"></i>Goal
+              </span>
+              <span>
+                <i className="legend-dot obstacle-dot"></i>Obstacle
+              </span>
+              <span>
+                <i className="legend-dot visited-dot"></i>Visited
+              </span>
+              <span>
+                <i className="legend-dot path-dot"></i>Path
+              </span>
             </div>
           </div>
 
-          <SimulatorGrid
-            scenario={selectedScenario}
-            robotPosition={robotPosition}
-            path={visiblePath}
-            visited={visibleVisited}
-            sensorReadings={sensorReadings}
-            localizationSample={currentLocalizationSample}
-          />
+          <aside className="sidebar">
+            <ControlPanel
+              scenarios={scenarios}
+              selectedScenarioName={selectedScenario.name}
+              selectedPlanner={selectedPlanner}
+              isAnimating={isAnimating}
+              onScenarioChange={handleScenarioChange}
+              onPlannerChange={handlePlannerChange}
+              onPlanPath={handlePlanPath}
+              onVisualizeSearch={handleVisualizeSearch}
+              onAnimate={handleAnimate}
+              onReset={resetSimulation}
+            />
 
-          <div className="legend">
-            <span>
-              <i className="legend-dot robot-dot"></i>Robot
-            </span>
-            <span>
-              <i className="legend-dot start-dot"></i>Start
-            </span>
-            <span>
-              <i className="legend-dot goal-dot"></i>Goal
-            </span>
-            <span>
-              <i className="legend-dot obstacle-dot"></i>Obstacle
-            </span>
-            <span>
-              <i className="legend-dot visited-dot"></i>Visited
-            </span>
-            <span>
-              <i className="legend-dot path-dot"></i>Path
-            </span>
-          </div>
-        </div>
+            <MetricsPanel metrics={metrics} />
+          </aside>
+        </section>
+      </main>
+      <section className="dashboard-grid">
+        <SensorPanel readings={sensorReadings} />
 
-        <aside className="side-panel">
-          <ControlPanel
-            scenarios={scenarios}
-            selectedScenarioName={selectedScenario.name}
-            selectedPlanner={selectedPlanner}
-            onScenarioChange={handleScenarioChange}
-            onPlannerChange={handlePlannerChange}
-            onPlanPath={handlePlanPath}
-            onVisualizeSearch={handleVisualizeSearch}
-            onAnimate={handleAnimate}
-            onReset={() => resetSimulation()}
-            isAnimating={isAnimating}
-          />
+        <LocalizationPanel
+          sample={currentLocalizationSample}
+          metrics={localizationMetrics}
+        />
 
-          <MetricsPanel metrics={metrics} />
+        <TelemetryExportPanel
+          scenario={selectedScenario}
+          algorithm={plannedAlgorithm ?? selectedPlanner}
+          metrics={metrics}
+          path={visiblePath}
+          visited={visibleVisited}
+          localizationSamples={localizationSamples}
+        />
 
-          <SensorPanel readings={sensorReadings} />
-          <LocalizationPanel
-            sample={currentLocalizationSample}
-            metrics={localizationMetrics}
-          />
-
-          <TelemetryExportPanel
-            scenario={selectedScenario}
-            algorithm={plannedAlgorithm ?? selectedPlanner}
-            metrics={metrics}
-            path={visiblePath}
-            visited={visibleVisited}
-            localizationSamples={localizationSamples}
-          />
-
-          <PlannerComparisonPanel scenario={selectedScenario} />
-        </aside>
+        <PlannerComparisonPanel scenario={selectedScenario} />
       </section>
-    </main>
+    </>
   );
 }
 
