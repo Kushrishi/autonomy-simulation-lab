@@ -7,6 +7,9 @@ import type {
 } from "../simulation/types";
 
 export type TelemetryExportPayload = {
+  schemaVersion: 1;
+  units: { position: "grid-cell"; time: "simulation-step" };
+  scenarioSnapshot: Scenario;
   generatedAt: string;
   scenarioName: string;
   algorithm: PlannerName;
@@ -48,15 +51,18 @@ function downloadFile(fileName: string, content: string, mimeType: string) {
   URL.revokeObjectURL(url);
 }
 
-function buildPayload(input: TelemetryExportInput): TelemetryExportPayload {
+export function buildPayload(input: TelemetryExportInput): TelemetryExportPayload {
   return {
+    schemaVersion: 1,
+    units: { position: "grid-cell", time: "simulation-step" },
+    scenarioSnapshot: structuredClone(input.scenario),
     generatedAt: new Date().toISOString(),
     scenarioName: input.scenario.name,
     algorithm: input.algorithm,
-    metrics: input.metrics,
-    path: input.path,
-    visited: input.visited,
-    localizationSamples: input.localizationSamples,
+    metrics: structuredClone(input.metrics),
+    path: structuredClone(input.path),
+    visited: structuredClone(input.visited),
+    localizationSamples: structuredClone(input.localizationSamples),
   };
 }
 
@@ -68,7 +74,7 @@ function formatNumber(value: number | undefined): string {
   return value.toFixed(4);
 }
 
-function convertSamplesToCsvRows(payload: TelemetryExportPayload): string {
+export function convertSamplesToCsvRows(payload: TelemetryExportPayload): string {
   const header = [
     "scenario",
     "algorithm",
@@ -98,7 +104,7 @@ function convertSamplesToCsvRows(payload: TelemetryExportPayload): string {
     rows.push([
       payload.scenarioName,
       payload.algorithm,
-      index.toString(),
+      (sample?.step ?? index).toString(),
       formatNumber(sample?.truePosition.row),
       formatNumber(sample?.truePosition.col),
       formatNumber(sample?.measuredPosition.row),
@@ -112,7 +118,7 @@ function convertSamplesToCsvRows(payload: TelemetryExportPayload): string {
   }
 
   return [header, ...rows]
-    .map((row) => row.map((cell) => `"${cell}"`).join(","))
+    .map((row) => row.map((cell) => `"${cell.replaceAll('"', '""')}"`).join(","))
     .join("\n");
 }
 
