@@ -161,4 +161,4 @@ http://localhost:5173/autonomy-simulation-lab/
 
 ## Status
 
-**v1.0.0 is complete.** The repository is preserved as a finished engineering project rather than an actively expanding research program.
+**v1.0.0 is complete.** Maintenance now hardens telemetry exports; schema v1 records a scenario snapshot and explicit grid-cell / simulation-step units. A bounded native perception replay extension is planned in the [architecture](docs/continuation_architecture.md). It is not yet an integrated C++ autonomy application.
