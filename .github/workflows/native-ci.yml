@@ -32,6 +32,14 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Install libpng (Linux)
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y libpng-dev
+
+      - name: Install libpng (macOS)
+        if: runner.os == 'macOS'
+        run: brew install libpng
+
       - name: Configure
         run: >
           cmake -S native -B native/build
