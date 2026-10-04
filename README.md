@@ -161,4 +161,4 @@ http://localhost:5173/autonomy-simulation-lab/
 
 ## Status
 
-**v1.0.0 is complete.** Maintenance now hardens telemetry exports; schema v1 records a scenario snapshot and explicit grid-cell / simulation-step units. A bounded native perception replay extension is planned in the [architecture](docs/continuation_architecture.md). It is not yet an integrated C++ autonomy application.
+**v1.0.0 is complete and stable.** The browser application is an educational planning, localization, and estimation environment with versioned telemetry export. Future native perception work is being developed separately and is not part of the v1.0 release.
