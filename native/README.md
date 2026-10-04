@@ -2,8 +2,9 @@
 
 This directory contains the native recorded-input path for Autonomy Simulation Lab.
 
-The current boundary validates both the manifest and the exact bytes named by it.
-Decoding, preprocessing, inference, and visualization remain outside this layer.
+The current boundary validates the manifest and exact frame bytes, then decodes
+PNG inputs into bounded RGB8 buffers. Preprocessing, inference, and visualization
+remain outside this layer.
 
 ## Manifest contract
 
@@ -24,6 +25,8 @@ Rules:
 - each referenced file must match its declared SHA-256 digest.
 
 Files are hashed with bounded streaming I/O; a complete recording is not loaded into memory.
+PNG decoding additionally enforces a caller-supplied pixel-count limit before allocating
+the RGB output buffer.
 
 ## Build
 
@@ -47,5 +50,12 @@ Verify the referenced file bytes:
 ./native/build/asl-replay verify-files native/examples/manifest.tsv
 ```
 
-The next native boundary is format-aware frame decoding with explicit failure counts.
+Decode one PNG into RGB8:
+
+```bash
+./native/build/asl-replay decode-png path/to/frame.png
+```
+
+The PNG adapter uses libpng rather than a vendored image decoder. The next native
+boundary is an explicit model-preprocessing contract with an independent reference.
 Model inference remains intentionally later.

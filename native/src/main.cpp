@@ -1,4 +1,5 @@
 #include "asl/frame_files.hpp"
+#include "asl/png_decode.hpp"
 #include "asl/replay_manifest.hpp"
 
 #include <cstdint>
@@ -25,7 +26,8 @@ void usage() {
     std::cerr
         << "usage:\n"
         << "  asl-replay validate-manifest MANIFEST.tsv [MAX_RECORDS]\n"
-        << "  asl-replay verify-files MANIFEST.tsv [MAX_RECORDS] [MAX_FILE_BYTES]\n";
+        << "  asl-replay verify-files MANIFEST.tsv [MAX_RECORDS] [MAX_FILE_BYTES]\n"
+        << "  asl-replay decode-png IMAGE.png [MAX_PIXELS]\n";
 }
 
 }  // namespace
@@ -68,6 +70,18 @@ int main(int argc, char** argv) {
             std::cout << "frame files valid\n";
             std::cout << "frames: " << frames.size() << "\n";
             std::cout << "total_bytes: " << total_bytes << "\n";
+            return 0;
+        }
+
+        if (command == "decode-png" && argc <= 4) {
+            const auto max_pixels =
+                argc == 4 ? parse_positive(argv[3], "MAX_PIXELS")
+                          : static_cast<std::uint64_t>(100000000);
+            const auto image = asl::replay::decode_png_rgb8(argv[2], max_pixels);
+            std::cout << "PNG valid\n";
+            std::cout << "width: " << image.width << "\n";
+            std::cout << "height: " << image.height << "\n";
+            std::cout << "rgb_bytes: " << image.pixels.size() << "\n";
             return 0;
         }
 
