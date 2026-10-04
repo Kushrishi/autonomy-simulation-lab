@@ -1,9 +1,9 @@
 # Native replay
 
-This directory begins the native replay path for Autonomy Simulation Lab.
+This directory contains the native recorded-input path for Autonomy Simulation Lab.
 
-The first milestone is deliberately small: define and validate the recorded-input
-manifest before adding decoding, preprocessing, inference, or visualization.
+The current boundary validates both the manifest and the exact bytes named by it.
+Decoding, preprocessing, inference, and visualization remain outside this layer.
 
 ## Manifest contract
 
@@ -17,12 +17,13 @@ Rules:
 
 - frame IDs are nonempty and unique;
 - timestamps are unsigned integers and strictly increasing;
-- paths are nonempty;
+- paths are relative to the manifest directory and may not traverse outside it;
+- referenced paths must resolve to regular files inside the manifest directory;
 - SHA-256 declarations are 64 lowercase hexadecimal characters;
-- record count is bounded by the caller.
+- record count and per-file byte count are bounded by the caller;
+- each referenced file must match its declared SHA-256 digest.
 
-The current validator checks the manifest contract only. It does **not** yet read
-frame bytes or verify the declared SHA-256 values against files.
+Files are hashed with bounded streaming I/O; a complete recording is not loaded into memory.
 
 ## Build
 
@@ -32,14 +33,19 @@ cmake --build native/build
 ctest --test-dir native/build --output-on-failure
 ```
 
-On Linux, development CI also enables AddressSanitizer and
-UndefinedBehaviorSanitizer.
+On Linux, development CI also enables AddressSanitizer and UndefinedBehaviorSanitizer.
 
-Validate a manifest:
+Validate manifest structure:
 
 ```bash
 ./native/build/asl-replay validate-manifest native/examples/manifest.tsv
 ```
 
-The next native milestone is byte-level file identity and bounded frame reading.
-Model inference is intentionally later.
+Verify the referenced file bytes:
+
+```bash
+./native/build/asl-replay verify-files native/examples/manifest.tsv
+```
+
+The next native boundary is format-aware frame decoding with explicit failure counts.
+Model inference remains intentionally later.

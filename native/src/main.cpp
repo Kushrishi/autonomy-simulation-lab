@@ -1,39 +1,80 @@
+#include "asl/frame_files.hpp"
 #include "asl/replay_manifest.hpp"
 
-#include <cstdlib>
+#include <cstdint>
 #include <iostream>
 #include <stdexcept>
 #include <string>
 
+namespace {
+
+std::uint64_t parse_positive(const char* value, const char* name) {
+    try {
+        std::size_t parsed = 0;
+        const auto result = std::stoull(value, &parsed, 10);
+        if (parsed != std::string(value).size() || result == 0U) {
+            throw std::invalid_argument("invalid");
+        }
+        return result;
+    } catch (const std::exception&) {
+        throw std::invalid_argument(std::string(name) + " must be a positive integer");
+    }
+}
+
+void usage() {
+    std::cerr
+        << "usage:\n"
+        << "  asl-replay validate-manifest MANIFEST.tsv [MAX_RECORDS]\n"
+        << "  asl-replay verify-files MANIFEST.tsv [MAX_RECORDS] [MAX_FILE_BYTES]\n";
+}
+
+}  // namespace
+
 int main(int argc, char** argv) {
-    if (argc < 3 || std::string(argv[1]) != "validate-manifest" || argc > 4) {
-        std::cerr << "usage: asl-replay validate-manifest MANIFEST.tsv [MAX_RECORDS]\n";
+    if (argc < 3) {
+        usage();
         return 2;
     }
 
-    std::size_t max_records = 1000000;
-    if (argc == 4) {
-        try {
-            const auto parsed = std::stoull(argv[3]);
-            if (parsed == 0) {
-                throw std::invalid_argument("zero");
-            }
-            max_records = static_cast<std::size_t>(parsed);
-        } catch (const std::exception&) {
-            std::cerr << "MAX_RECORDS must be a positive integer\n";
-            return 2;
-        }
-    }
+    const std::string command = argv[1];
 
     try {
-        const auto records = asl::replay::load_manifest(argv[2], max_records);
-        std::cout << "manifest valid\n";
-        std::cout << "frames: " << records.size() << "\n";
-        std::cout << "first_timestamp_ns: " << records.front().timestamp_ns << "\n";
-        std::cout << "last_timestamp_ns: " << records.back().timestamp_ns << "\n";
-        return 0;
+        if (command == "validate-manifest" && argc <= 4) {
+            const auto max_records =
+                argc == 4 ? static_cast<std::size_t>(parse_positive(argv[3], "MAX_RECORDS"))
+                          : static_cast<std::size_t>(1000000);
+            const auto records = asl::replay::load_manifest(argv[2], max_records);
+            std::cout << "manifest valid\n";
+            std::cout << "frames: " << records.size() << "\n";
+            std::cout << "first_timestamp_ns: " << records.front().timestamp_ns << "\n";
+            std::cout << "last_timestamp_ns: " << records.back().timestamp_ns << "\n";
+            return 0;
+        }
+
+        if (command == "verify-files" && argc <= 5) {
+            const auto max_records =
+                argc >= 4 ? static_cast<std::size_t>(parse_positive(argv[3], "MAX_RECORDS"))
+                          : static_cast<std::size_t>(1000000);
+            const auto max_file_bytes =
+                argc == 5 ? parse_positive(argv[4], "MAX_FILE_BYTES")
+                          : static_cast<std::uint64_t>(536870912);
+
+            const auto frames =
+                asl::replay::verify_manifest_files(argv[2], max_records, max_file_bytes);
+            std::uint64_t total_bytes = 0;
+            for (const auto& frame : frames) {
+                total_bytes += frame.bytes;
+            }
+            std::cout << "frame files valid\n";
+            std::cout << "frames: " << frames.size() << "\n";
+            std::cout << "total_bytes: " << total_bytes << "\n";
+            return 0;
+        }
+
+        usage();
+        return 2;
     } catch (const std::exception& error) {
-        std::cerr << "manifest invalid: " << error.what() << "\n";
+        std::cerr << command << " failed: " << error.what() << "\n";
         return 1;
     }
 }
