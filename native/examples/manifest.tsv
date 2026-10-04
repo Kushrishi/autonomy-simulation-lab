@@ -1,0 +1,3 @@
+frame_id	timestamp_ns	path	sha256
+frame-0001	1000000000	frames/0001.png	aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+frame-0002	1033333333	frames/0002.png	bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb

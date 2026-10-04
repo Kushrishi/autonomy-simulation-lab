@@ -1,0 +1,48 @@
+name: Native replay CI
+
+on:
+  push:
+    paths:
+      - "native/**"
+      - ".github/workflows/native-ci.yml"
+  pull_request:
+    paths:
+      - "native/**"
+      - ".github/workflows/native-ci.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  native:
+    name: Native / ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            sanitizers: "ON"
+          - os: macos-latest
+            sanitizers: "OFF"
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Configure
+        run: >
+          cmake -S native -B native/build
+          -DCMAKE_BUILD_TYPE=Debug
+          -DASL_ENABLE_SANITIZERS=${{ matrix.sanitizers }}
+
+      - name: Build
+        run: cmake --build native/build --parallel
+
+      - name: Test
+        run: ctest --test-dir native/build --output-on-failure
+
+      - name: Validate example manifest
+        run: ./native/build/asl-replay validate-manifest native/examples/manifest.tsv
