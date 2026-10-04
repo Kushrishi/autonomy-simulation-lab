@@ -4,7 +4,8 @@
 
 #include <limits>
 #include <stdexcept>
-#include <string>\n#include <utility>
+#include <string>
+#include <utility>
 
 namespace asl::replay {
 
