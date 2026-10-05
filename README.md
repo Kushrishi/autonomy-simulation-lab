@@ -6,9 +6,9 @@
 **Release:** [v1.0.0](https://github.com/Kushrishi/autonomy-simulation-lab/releases/tag/v1.0.0)  
 **License:** MIT
 
-Autonomy Simulation Lab is a completed browser-based environment for path planning, dynamic replanning, noisy sensing, localization, state estimation, telemetry, and offline analysis.
+An interactive grid simulator for path planning, dynamic obstacles, noisy sensing, localization, and state estimation. Exported telemetry can be inspected with the included Python analysis scripts.
 
-The project combines classical planning algorithms with a deliberately simplified localization stack so that planning and estimation behavior can be inspected, compared, and tested in one interactive system.
+The browser application is complete. A separate [C++ replay tool](native/README.md) currently validates recording manifests, verifies file hashes, and decodes PNG frames. Preprocessing, model inference, and viewer integration are planned.
 
 ## Preview
 
@@ -16,29 +16,9 @@ The project combines classical planning algorithms with a deliberately simplifie
 
 ![Localization and planner analysis dashboard](docs/assets/localization-dashboard.png)
 
-## System overview
+## Workflow
 
-```text
-Scenario + terrain + obstacles
-        |
-        v
-Planner: BFS / A* / Dijkstra
-        |
-        v
-Search visualization + final path
-        |
-        v
-Robot motion + dynamic replanning
-        |
-        +--> range sensing
-        |
-        +--> GNSS-inspired localization
-        |       +--> noisy position fixes
-        |       +--> nonlinear range least squares
-        |       +--> constant-velocity Kalman filter
-        |
-        +--> telemetry export + Python analysis
-```
+Choose a grid scenario, run BFS, A*, or Dijkstra, and inspect the path and search history. Add obstacles during motion to trigger replanning. Compare noisy position fixes, range least-squares estimates, and Kalman-filtered positions against the simulated truth, then export the telemetry for analysis.
 
 ## What is implemented
 
@@ -145,7 +125,7 @@ The simulator exports planner, trajectory, sensor, and localization data to JSON
 ## Run locally
 
 ```bash
-npm install
+npm ci
 npm test
 npm run build
 npm run dev
