@@ -2,15 +2,18 @@
 
 ![CI](https://github.com/Kushrishi/autonomy-simulation-lab/actions/workflows/ci.yml/badge.svg)
 
-**Live demo:** https://kushrishi.github.io/autonomy-simulation-lab/  
-**Release:** [v1.0.0](https://github.com/Kushrishi/autonomy-simulation-lab/releases/tag/v1.0.0)  
-**License:** MIT
+**How can we inspect a sensing system’s inputs, estimates and failures reproducibly?**
 
-An interactive grid simulator for path planning, dynamic obstacles, noisy sensing, localization, and state estimation. Exported telemetry can be inspected with the included Python analysis scripts.
+Two layers answer different parts of that question:
 
-The browser application is complete. A separate [C++ replay tool](native/README.md) currently validates recording manifests, verifies file hashes, and decodes PNG frames. Preprocessing, model inference, and viewer integration are planned.
+| Layer | Current capability | Status |
+| --- | --- | --- |
+| Browser v1 | Interactive planning, noisy localization, state estimation and telemetry export | Stable [v1.0.0](https://github.com/Kushrishi/autonomy-simulation-lab/releases/tag/v1.0.0) |
+| Native C++ | Manifest and timestamp contracts, file identity, SHA-256 integrity and bounded RGB8 PNG decoding | Replay foundation; preprocessing, inference, viewer integration and regression comparison remain planned |
 
-[System overview](https://kushrishi.com/projects/autonomy-simulation-lab) · [Native replay contracts](native/README.md)
+[Live simulator](https://kushrishi.github.io/autonomy-simulation-lab/) · [System overview](https://kushrishi.com/projects/autonomy-simulation-lab) · [Native contracts and tests](native/README.md) · [MIT license](LICENSE)
+
+The browser is a simplified experimental environment, not a real autonomous vehicle stack. The native layer makes input identity, failure handling and reproducibility explicit before adding model execution.
 
 ## Preview
 
