@@ -122,6 +122,8 @@ The simulator exports planner, trajectory, sensor, and localization data to JSON
 - Pandas
 - Matplotlib
 
+[Project overview](https://kushrishi.com/projects/autonomy-simulation-lab)
+
 ## Run locally
 
 ```bash

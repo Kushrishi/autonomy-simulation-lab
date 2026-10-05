@@ -678,9 +678,8 @@ function App() {
             <p className="eyebrow">Autonomy Simulation Lab</p>
             <h1>Interactive Robot Navigation Simulator</h1>
             <p className="subtitle">
-              A browser-based autonomy simulation for path planning, obstacle
-              avoidance, scenario testing, and future navigation/localization
-              experiments.
+              Compare path planners, add noisy measurements and inspect
+              localization estimates in an interactive grid environment.
             </p>
           </div>
         </header>
