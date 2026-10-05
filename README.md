@@ -10,6 +10,8 @@ An interactive grid simulator for path planning, dynamic obstacles, noisy sensin
 
 The browser application is complete. A separate [C++ replay tool](native/README.md) currently validates recording manifests, verifies file hashes, and decodes PNG frames. Preprocessing, model inference, and viewer integration are planned.
 
+[System overview](https://kushrishi.com/projects/autonomy-simulation-lab) · [Native replay contracts](native/README.md)
+
 ## Preview
 
 ![Autonomy Simulation Lab simulator cockpit](docs/assets/simulator-cockpit.png)
