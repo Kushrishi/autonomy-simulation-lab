@@ -14,7 +14,7 @@ Browser v1.0.0 remains unchanged.
 | Output | Finite float32 JSONL with model/input/recording/config identity and round-trip values; partial failures preserved; no clobber of existing output. |
 | Comparison | Exact identities, missing/extra/order/timestamps, per-frame numerical/structural differences, fixed tolerances and latency distributions. Python CLI remains separate from native runner. |
 | Determinism policy | Exact repeated outputs observed on tested Linux host; general atol=rtol=1e-6 declared before real comparison; no cross-host bitwise claim. |
-| Tests | Ten native CTests locally ASan/UBSan; LeakSanitizer unavailable in Work VM. Linux CI enables ASan/UBSan and inference; macOS CI tests foundation/preprocessing/spatial metadata without ORT. |
+| Tests | Eleven native CTests locally ASan/UBSan, including SDK-independent viewer snapshot validation; LeakSanitizer unavailable in Work VM. Linux CI enables ASan/UBSan and inference; macOS CI tests foundation/preprocessing/spatial metadata without ORT. |
 | CI | PR11 native and browser CI passed; run 37417923250 includes successful build/test on Linux and macOS. |
 | Documentation/example | INFERENCE.md, two contracts, generated model provenance and synthetic manifest/PNG, optional spatial/viewer adapters. |
 

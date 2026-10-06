@@ -1,5 +1,6 @@
 """Synthetic KITTI-shaped metadata only. No dataset acquisition or raw data."""
 
+import hashlib
 import json
 import sys
 import tempfile
@@ -108,6 +109,46 @@ def main():
             }
         )
     )
+    # Mutate a source immediately after the bounded read: parsed metadata and
+    # its provenance must still describe exactly the same consumed snapshot.
+    for target in ("camera", "pose_time", "pose", "calibration"):
+        with tempfile.TemporaryDirectory() as temp:
+            seq, calib = fixture(Path(temp))
+            chosen = {
+                "camera": seq / "image_02/timestamps.txt",
+                "pose_time": seq / "oxts/timestamps.txt",
+                "pose": seq / "oxts/data/0000000000.txt",
+                "calibration": calib / "calib_imu_to_velo.txt",
+            }[target]
+            original = chosen.read_bytes()
+            read = adapter.snapshot
+
+            def mutate_after_read(path, limit, read=read, chosen=chosen):
+                data = read(path, limit)
+                if Path(path) == chosen:
+                    chosen.write_bytes(b"mutated after read")
+                return data
+
+            adapter.snapshot = mutate_after_read
+            try:
+                _, spatial, provenance = adapter.adapt(seq, calib, 2)
+            finally:
+                adapter.snapshot = read
+            proof = json.loads(provenance.read_text())
+            expected = hashlib.sha256(original).hexdigest()
+            if target == "camera":
+                assert proof["camera_timestamps_sha256"] == expected
+            elif target == "pose_time":
+                assert proof["oxts_timestamps_sha256"] == expected
+            elif target == "calibration":
+                assert proof["calibration_sha256"][chosen.name] == expected
+            else:
+                row = json.loads(spatial.read_text().splitlines()[0])
+                assert (
+                    row["oxts_sha256"] == expected
+                    and row["geodetic_lat_lon_alt"][0] == 49
+                )
+    print("metadata read/parse/hash snapshot identity passed for four source types")
 
 
 if __name__ == "__main__":
