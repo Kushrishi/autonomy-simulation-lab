@@ -9,19 +9,8 @@
 
 namespace asl::replay {
 
-RgbImage decode_png_rgb8(const std::filesystem::path& path, std::uint64_t max_pixels) {
-    if (max_pixels == 0U) {
-        throw std::invalid_argument("max_pixels must be greater than zero");
-    }
-
-    png_image image{};
-    image.version = PNG_IMAGE_VERSION;
-    const auto filename = path.string();
-
-    if (png_image_begin_read_from_file(&image, filename.c_str()) == 0) {
-        throw std::runtime_error("unable to read PNG header: " + filename + ": " + image.message);
-    }
-
+namespace {
+RgbImage finish_rgb(png_image& image, const std::string& filename, std::uint64_t max_pixels) {
     const auto fail = [&image, &filename](const std::string& reason) -> RgbImage {
         const std::string detail = image.message;
         png_image_free(&image);
@@ -59,6 +48,33 @@ RgbImage decode_png_rgb8(const std::filesystem::path& path, std::uint64_t max_pi
         static_cast<std::uint32_t>(height),
         std::move(pixels),
     };
+}
+
+}  // namespace
+
+RgbImage decode_png_rgb8(const std::filesystem::path& path, std::uint64_t max_pixels) {
+    if (max_pixels == 0U) throw std::invalid_argument("max_pixels must be greater than zero");
+    png_image image{};
+    image.version = PNG_IMAGE_VERSION;
+    const auto filename = path.string();
+    if (png_image_begin_read_from_file(&image, filename.c_str()) == 0) {
+        const std::string detail = image.message;
+        png_image_free(&image);
+        throw std::runtime_error("unable to read PNG header: " + filename + ": " + detail);
+    }
+    return finish_rgb(image, filename, max_pixels);
+}
+
+RgbImage decode_png_rgb8_bytes(const std::vector<unsigned char>& bytes, std::uint64_t max_pixels) {
+    if (max_pixels == 0U) throw std::invalid_argument("max_pixels must be greater than zero");
+    png_image image{};
+    image.version = PNG_IMAGE_VERSION;
+    if (bytes.empty() || png_image_begin_read_from_memory(&image, bytes.data(), bytes.size()) == 0) {
+        const std::string detail = image.message;
+        png_image_free(&image);
+        throw std::runtime_error("unable to read in-memory PNG header: " + detail);
+    }
+    return finish_rgb(image, "verified byte snapshot", max_pixels);
 }
 
 }  // namespace asl::replay

@@ -7,6 +7,7 @@ Browser v1.0.0 remains unchanged.
 | Required boundary | Evidence / limitation |
 | --- | --- |
 | Recorded input identity | Existing manifest/path/timestamp/SHA contracts; tiny project-generated recording committed. |
+| Consumed-byte identity | Bounded manifest/model/frame snapshots are hashed and consumed directly; path changes after read do not change the decoded/loaded bytes. Single-file ONNX only. |
 | Bounded decode | libpng RGB8 tests; corrupt and oversized inputs rejected by existing tests. |
 | Preprocessing | Original seven-pattern Python/C++ parity; independent Pillow 12.3.0 eight-pattern model contract. <=1e-6 max error. |
 | Inference | Pinned ORT 1.30.0 CPU; tiny generated fixture in CI; optional pinned MobileNet real workload locally replayed twice. |

@@ -18,4 +18,9 @@ RgbImage decode_png_rgb8(
     std::uint64_t max_pixels = 100000000
 );
 
+RgbImage decode_png_rgb8_bytes(
+    const std::vector<unsigned char>& bytes,
+    std::uint64_t max_pixels = 100000000
+);
+
 }  // namespace asl::replay

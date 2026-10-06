@@ -84,12 +84,19 @@ and p50/p95 stage latencies. Exit 1 means a detected difference; malformed input
 raises an error. Latencies are excluded from the numerical comparison.
 
 Output publication refuses existing records; failures leave `.partial` records
-for inspection. A hard link publishes a completed file without replacing a
+for inspection. An atomic writer-lock directory prevents simultaneous runners
+from truncating each other's partial record. A pre-existing lock is preserved;
+an interrupted process may require explicit recovery of its stale lock, after
+inspection. A hard link publishes a completed file without replacing a
 concurrent output. Frame timing excludes session/model initialization and initial
 whole-recording verification; total includes per-frame re-verification, decode,
 preprocess and inference, excluding JSON serialization. Benchmarks must state
-this boundary and hardware. Input identity is rechecked before decode; this does
-not promise atomic isolation against concurrent hostile file mutation.
+this boundary and hardware. Each manifest, model and decoded frame is consumed
+from the same bounded byte snapshot used to compute its recorded SHA-256.
+Changing a source path after the read cannot change those consumed bytes.
+Filesystem names/directories are not transactionally locked. This workload
+supports embedded, single-file ONNX artifacts; external-data model sidecars
+are not supported by the memory-loading boundary.
 
 ## Next / not claimed
 

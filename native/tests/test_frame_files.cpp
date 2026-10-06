@@ -60,6 +60,16 @@ int main() {
         const auto digest = asl::replay::sha256_file(root / "frames/abc.txt", 1024);
         require(digest.bytes == 3, "unexpected byte count");
         require(digest.sha256 == kAbcSha256, "SHA-256 implementation disagrees with known vector");
+        const auto snapshot = asl::replay::read_file_snapshot(root / "frames/abc.txt", 3);
+        require(snapshot.sha256 == kAbcSha256, "snapshot SHA disagrees with known vector");
+        write_text(root / "frames/abc.txt", "changed");
+        require(std::string(snapshot.bytes.begin(), snapshot.bytes.end()) == "abc",
+                "consumed snapshot changed when its source path changed");
+        bool bounded = false;
+        try { static_cast<void>(asl::replay::read_file_snapshot(root / "frames/abc.txt", 3)); }
+        catch (const std::runtime_error&) { bounded = true; }
+        require(bounded, "snapshot byte limit not enforced");
+        write_text(root / "frames/abc.txt", "abc");
 
         const auto manifest_path = root / "manifest.tsv";
         write_text(
