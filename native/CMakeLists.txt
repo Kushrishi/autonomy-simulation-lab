@@ -80,3 +80,5 @@ add_test(NAME spatial_adapter_contract COMMAND ${Python3_EXECUTABLE}
 install(TARGETS asl-replay RUNTIME DESTINATION bin)
 add_test(NAME fault_tooling_contract COMMAND ${Python3_EXECUTABLE}
     ${CMAKE_CURRENT_SOURCE_DIR}/tests/test_faults.py)
+add_test(NAME viewer_snapshot_contract COMMAND ${Python3_EXECUTABLE}
+    ${CMAKE_CURRENT_SOURCE_DIR}/tests/test_viewer_boundary.py)

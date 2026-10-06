@@ -38,6 +38,13 @@ camera-to-world projection. Their names, timestamps, frame bytes and OXTS record
 have local identities. Synthetic tests cover nanosecond precision, known vertical
 offset, north displacement, missing pose, skew, nonfinite values and calibration.
 
+Timestamp, calibration and OXTS metadata are parsed and hashed from the same
+bounded byte snapshot. Mutation-after-read tests verify this identity for all
+four source types. Output files use exclusive creation; existing files are not
+overwritten. An I/O failure during publication may leave partial output files:
+preserve them for diagnosis and use a fresh local copy rather than treating the
+partial recording as accepted.
+
 ## Rerun export
 
 Pinned optional dependency: `rerun-sdk==0.38.1` (upstream Apache-2.0/MIT).
@@ -54,6 +61,14 @@ elapsed/frame timelines, top indices, latency and regression flags. Spatial data
 adds ENU position and stream skew. A synthetic MobileNet replay export was
 generated and reopened using the pinned CLI's RRD verification. No real-sequence
 visualization or viewer interaction quality is claimed yet.
+
+Viewer validation is SDK-independent and runs in CI. It requires exact ordered
+manifest/result/spatial coverage, matching timestamps and input hashes, finite
+ENU positions and consistent spatial skew. Images are retained as verified byte
+snapshots and passed to Rerun as bytes, not reopened paths. Bounds are 64 MiB per
+image and 256 MiB aggregate; choose a declared fixed subset if a recording exceeds
+that memory boundary. This is not a streaming large-dataset viewer. RRD output
+uses exclusive reservation; an SDK/I/O failure may preserve a partial owned RRD.
 
 ## MCAP and release boundary
 

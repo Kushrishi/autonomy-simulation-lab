@@ -28,10 +28,18 @@ def timestamp_ns(text):
     return seconds * 1_000_000_000 + int(fraction.ljust(9, "0"))
 
 
-def times(path):
-    if path.stat().st_size > 2_000_000:
-        raise ValueError("timestamp file too large")
-    result = [timestamp_ns(line) for line in path.read_text().splitlines()]
+def snapshot(path, limit):
+    """Bounded bytes: parse and hash this same snapshot, never a second read."""
+    with Path(path).open("rb") as stream:
+        data = stream.read(limit + 1)
+    if len(data) > limit:
+        raise ValueError("input exceeds adapter byte bound")
+    return data
+
+
+def times(path, data=None):
+    data = snapshot(path, 2_000_000) if data is None else data
+    result = [timestamp_ns(line) for line in data.decode().splitlines()]
     if not result or len(result) > 10000 or any(b <= a for a, b in pairwise(result)):
         raise ValueError("empty, oversized or nonmonotonic timestamp stream")
     return result
@@ -41,8 +49,12 @@ def digest(path):
     if path.stat().st_size > 536870912:
         raise ValueError("file too large")
     h = hashlib.sha256()
+    size = 0
     with path.open("rb") as f:
         while block := f.read(1048576):
+            size += len(block)
+            if size > 536870912:
+                raise ValueError("file exceeds adapter byte bound while reading")
             h.update(block)
     return h.hexdigest()
 
@@ -103,8 +115,10 @@ def adapt(sequence, calibration, limit=12, max_skew_ns=50_000_000):
     sequence, calibration = Path(sequence).resolve(), Path(calibration).resolve()
     if not sequence.name.endswith("_sync") or not 1 <= limit <= 1000 or max_skew_ns < 0:
         raise ValueError("synced sequence and bounded selection required")
-    camera = times(sequence / "image_02/timestamps.txt")
-    pose = times(sequence / "oxts/timestamps.txt")
+    camera_bytes = snapshot(sequence / "image_02/timestamps.txt", 2_000_000)
+    pose_bytes = snapshot(sequence / "oxts/timestamps.txt", 2_000_000)
+    camera = times(None, camera_bytes)
+    pose = times(None, pose_bytes)
     if len(camera) != len(pose):
         raise ValueError("camera/OXTS timestamp counts differ")
     outputs = [
@@ -120,10 +134,9 @@ def adapt(sequence, calibration, limit=12, max_skew_ns=50_000_000):
         "calib_velo_to_cam.txt",
     ):
         path = calibration / name
-        if path.stat().st_size > 65536:
-            raise ValueError("calibration file too large")
+        data = snapshot(path, 65536)
         rows = dict(
-            line.split(":", 1) for line in path.read_text().splitlines() if ":" in line
+            line.split(":", 1) for line in data.decode().splitlines() if ":" in line
         )
         keys = (
             ("P_rect_02", "R_rect_00") if name == "calib_cam_to_cam.txt" else ("R", "T")
@@ -135,7 +148,7 @@ def adapt(sequence, calibration, limit=12, max_skew_ns=50_000_000):
                 raise ValueError("invalid calibration values")
             if key in ("R", "R_rect_00"):
                 validate_rotation(values)
-        calibration_hashes[name] = digest(path)
+        calibration_hashes[name] = hashlib.sha256(data).hexdigest()
     lines = ["frame_id\ttimestamp_ns\tpath\tsha256"]
     spatial, origin = [], None
     for i in range(min(limit, len(camera))):
@@ -145,9 +158,8 @@ def adapt(sequence, calibration, limit=12, max_skew_ns=50_000_000):
         image.relative_to(sequence)  # no escaping symlink
         path = sequence / f"oxts/data/{frame}.txt"
         path.resolve().relative_to(sequence)
-        if path.stat().st_size > 4096:
-            raise ValueError("OXTS record too large")
-        values = [float(v) for v in path.read_text().split()]
+        data = snapshot(path, 4096)
+        values = [float(v) for v in data.decode().split()]
         if len(values) != 30 or not all(math.isfinite(v) for v in values):
             raise ValueError("expected finite 30-field OXTS record")
         skew = pose[i] - camera[i]
@@ -167,15 +179,14 @@ def adapt(sequence, calibration, limit=12, max_skew_ns=50_000_000):
                 "position_enu_m": local,
                 "geodetic_lat_lon_alt": position,
                 "roll_pitch_yaw_rad": values[3:6],
-                "oxts_sha256": digest(path),
+                "oxts_sha256": hashlib.sha256(data).hexdigest(),
             }
         )
     # Validate every selected record first; no partially accepted recording.
-    outputs[0].write_text("\n".join(lines) + "\n")
-    outputs[1].write_text(
-        "".join(json.dumps(row, allow_nan=False) + "\n" for row in spatial)
-    )
-    outputs[2].write_text(
+    manifest_text = "\n".join(lines) + "\n"
+    payloads = [
+        manifest_text,
+        "".join(json.dumps(row, allow_nan=False) + "\n" for row in spatial),
         json.dumps(
             {
                 "adapter": "asl-kitti-sync-v1",
@@ -187,17 +198,18 @@ def adapt(sequence, calibration, limit=12, max_skew_ns=50_000_000):
                 "coordinate_frame": "WGS84 ECEF to ENU at first OXTS position; metres",
                 "origin_lat_lon_alt": origin,
                 "calibration_sha256": calibration_hashes,
-                "camera_timestamps_sha256": digest(
-                    sequence / "image_02/timestamps.txt"
-                ),
-                "oxts_timestamps_sha256": digest(sequence / "oxts/timestamps.txt"),
-                "manifest_sha256": digest(outputs[0]),
+                "camera_timestamps_sha256": hashlib.sha256(camera_bytes).hexdigest(),
+                "oxts_timestamps_sha256": hashlib.sha256(pose_bytes).hexdigest(),
+                "manifest_sha256": hashlib.sha256(manifest_text.encode()).hexdigest(),
                 "sensor_fusion": False,
             },
             indent=2,
         )
-        + "\n"
-    )
+        + "\n",
+    ]
+    for path, payload in zip(outputs, payloads):
+        with path.open("x", encoding="utf-8", newline="") as stream:
+            stream.write(payload)
     return outputs
 
 
@@ -208,7 +220,11 @@ def main():
     p.add_argument("--limit", type=int, default=12)
     p.add_argument("--max-skew-ns", type=int, default=50_000_000)
     a = p.parse_args()
-    for path in adapt(a.sequence, a.calibration, a.limit, a.max_skew_ns):
+    try:
+        outputs = adapt(a.sequence, a.calibration, a.limit, a.max_skew_ns)
+    except (ValueError, OSError, KeyError, TypeError) as error:
+        p.exit(2, f"sequence import failed: {error}\n")
+    for path in outputs:
         print(path)
 
 
