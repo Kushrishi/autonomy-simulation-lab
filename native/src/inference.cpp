@@ -17,6 +17,22 @@
 namespace asl::replay {
 namespace {
 using Clock = std::chrono::steady_clock;
+class OutputLock {
+public:
+    explicit OutputLock(const std::filesystem::path& output) : path_(output) {
+        path_ += ".lock";
+        if (!std::filesystem::create_directory(path_))
+            throw std::runtime_error("output writer lock already exists");
+    }
+    ~OutputLock() {
+        std::error_code error;
+        std::filesystem::remove(path_, error);
+    }
+    OutputLock(const OutputLock&) = delete;
+    OutputLock& operator=(const OutputLock&) = delete;
+private:
+    std::filesystem::path path_;
+};
 double ms(Clock::time_point a, Clock::time_point b) {
     return std::chrono::duration<double, std::milli>(b-a).count();
 }
@@ -39,16 +55,20 @@ void run_inference(const std::filesystem::path& manifest,
     if(preprocessing!="asl-rgb-bilinear-v1" && preprocessing!="asl-imagenet-center-v1")
         throw std::runtime_error("unknown preprocessing contract");
     if (std::filesystem::exists(output)) throw std::runtime_error("output already exists; preserve earlier records");
-    const auto model_sha = sha256_file(model, 536870912).sha256;
+    const auto model_snapshot = read_file_snapshot(model, 536870912);
+    const auto& model_sha = model_snapshot.sha256;
     if (model_sha != expected_model_sha) throw std::runtime_error("model SHA-256 mismatch");
-    const auto recording_sha = sha256_file(manifest, 16777216).sha256;
-    const auto frames = verify_manifest_files(manifest, 10000, 536870912);
+    const auto manifest_snapshot = read_file_snapshot(manifest, 16777216);
+    const auto& recording_sha = manifest_snapshot.sha256;
+    std::istringstream manifest_input(std::string(
+        manifest_snapshot.bytes.begin(), manifest_snapshot.bytes.end()));
+    const auto frames = verify_frame_records(manifest, parse_manifest(manifest_input, 10000), 536870912);
     Ort::Env env(ORT_LOGGING_LEVEL_WARNING, "asl-replay");
     Ort::SessionOptions options;
     options.SetIntraOpNumThreads(1); options.SetInterOpNumThreads(1);
     options.SetExecutionMode(ExecutionMode::ORT_SEQUENTIAL);
     options.SetGraphOptimizationLevel(GraphOptimizationLevel::ORT_DISABLE_ALL);
-    Ort::Session session(env, model.c_str(), options);
+    Ort::Session session(env, model_snapshot.bytes.data(), model_snapshot.bytes.size(), options);
     if (session.GetInputCount()!=1 || session.GetOutputCount()!=1)
         throw std::runtime_error("one input/output required by this workload boundary");
     auto input_type = session.GetInputTypeInfo(0);
@@ -64,6 +84,8 @@ void run_inference(const std::filesystem::path& manifest,
     const char* ins[]{input_name.get()}; const char* outs[]{output_name.get()};
     const auto memory = Ort::MemoryInfo::CreateCpu(OrtArenaAllocator, OrtMemTypeDefault);
     // A partial file is intentionally preserved on failure, never published as complete.
+    const OutputLock writer_lock(output);
+    if (std::filesystem::exists(output)) throw std::runtime_error("output already exists");
     auto partial = output; partial += ".partial";
     if (std::filesystem::exists(partial)) throw std::runtime_error("partial output already exists");
     std::ofstream stream(partial);
@@ -72,11 +94,12 @@ void run_inference(const std::filesystem::path& manifest,
     std::size_t total_output_elements=0;
     for (const auto& frame : frames) {
         const auto start=Clock::now();
-        // Recheck identity immediately before decode to detect intervening changes.
-        if (sha256_file(frame.resolved_path, 536870912).sha256 != frame.record.sha256)
+        // Hash and decode the same immutable bounded bytes, not two path opens.
+        const auto snapshot = read_file_snapshot(frame.resolved_path, 536870912);
+        if (snapshot.sha256 != frame.record.sha256)
             throw std::runtime_error("frame identity changed after validation");
         const auto verified=Clock::now();
-        auto image=decode_png_rgb8(frame.resolved_path, 100000000);
+        auto image=decode_png_rgb8_bytes(snapshot.bytes, 100000000);
         const auto decoded=Clock::now();
         auto input=preprocessing=="asl-rgb-bilinear-v1" ? preprocess_rgb(image) : preprocess_imagenet_center(image);
         const auto preprocessed=Clock::now();

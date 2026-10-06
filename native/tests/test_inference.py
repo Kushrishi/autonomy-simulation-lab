@@ -119,6 +119,17 @@ def main(binary):
         assert compare.compare(base, list(reversed(base)))["reordered"]
         assert run("wrong-model.jsonl", "0" * 64).returncode != 0
         assert run("run0.jsonl").returncode != 0  # preserve earlier output
+        locked = folder / "locked.jsonl.lock"
+        locked.mkdir()
+        marker = locked / "owner.txt"
+        marker.write_text("another writer")
+        assert run("locked.jsonl").returncode != 0
+        assert marker.read_text() == "another writer"
+        assert not (folder / "locked.jsonl.partial").exists()
+        partial = folder / "partial.jsonl.partial"
+        partial.write_text("preserved partial evidence")
+        assert run("partial.jsonl").returncode != 0
+        assert partial.read_text() == "preserved partial evidence"
         bad_manifests = [
             good.replace("frame.png", "../frame.png"),
             good.replace("frame.png", "missing.png"),

@@ -1,4 +1,5 @@
 #include "asl/png_decode.hpp"
+#include "asl/sha256.hpp"
 
 #include <png.h>
 
@@ -74,6 +75,15 @@ int main() {
         require(decoded.pixels[6] == 0U && decoded.pixels[8] == 255U, "blue pixel changed");
 
         require_failure(png_path, 3, "pixel limit");
+        const auto snapshot = asl::replay::read_file_snapshot(png_path, 1024);
+        std::ofstream(png_path, std::ios::binary) << "changed after verified read";
+        const auto from_bytes = asl::replay::decode_png_rgb8_bytes(snapshot.bytes, 4);
+        require(from_bytes.pixels == decoded.pixels,
+                "byte-snapshot decode reopened the changed path");
+        bool bounded = false;
+        try { static_cast<void>(asl::replay::decode_png_rgb8_bytes(snapshot.bytes, 3)); }
+        catch (const std::runtime_error&) { bounded = true; }
+        require(bounded, "memory PNG pixel limit not enforced");
 
         const auto invalid_path = root / "not-png.bin";
         std::ofstream(invalid_path, std::ios::binary) << "not a png";

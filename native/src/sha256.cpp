@@ -197,4 +197,25 @@ FileDigest sha256_file(const std::filesystem::path& path, std::uint64_t max_byte
     };
 }
 
+FileSnapshot read_file_snapshot(const std::filesystem::path& path, std::uint64_t max_bytes) {
+    if (max_bytes == 0U) throw std::invalid_argument("max_bytes must be greater than zero");
+    std::ifstream input(path, std::ios::binary);
+    if (!input) throw std::runtime_error("unable to open snapshot file: " + path.string());
+    FileSnapshot snapshot;
+    Sha256 hasher;
+    std::array<unsigned char, 65536> buffer{};
+    while (input) {
+        input.read(reinterpret_cast<char*>(buffer.data()), static_cast<std::streamsize>(buffer.size()));
+        const auto count = input.gcount();
+        if (count <= 0) break;
+        if (static_cast<std::uint64_t>(count) > max_bytes - snapshot.bytes.size())
+            throw std::runtime_error("snapshot file exceeds configured byte limit");
+        hasher.update(buffer.data(), static_cast<std::size_t>(count));
+        snapshot.bytes.insert(snapshot.bytes.end(), buffer.begin(), buffer.begin() + count);
+    }
+    if (!input.eof() && input.fail()) throw std::runtime_error("error while reading snapshot file");
+    snapshot.sha256 = digest_hex(hasher.finalize());
+    return snapshot;
+}
+
 }  // namespace asl::replay

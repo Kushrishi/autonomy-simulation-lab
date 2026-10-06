@@ -64,6 +64,14 @@ std::vector<VerifiedFrame> verify_manifest_files(
     std::uint64_t max_file_bytes
 ) {
     const auto records = load_manifest(manifest_path, max_records);
+    return verify_frame_records(manifest_path, records, max_file_bytes);
+}
+
+std::vector<VerifiedFrame> verify_frame_records(
+    const std::filesystem::path& manifest_path,
+    const std::vector<FrameRecord>& records,
+    std::uint64_t max_file_bytes
+) {
     std::vector<VerifiedFrame> verified;
     verified.reserve(records.size());
 
