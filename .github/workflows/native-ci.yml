@@ -25,8 +25,10 @@ jobs:
         include:
           - os: ubuntu-latest
             sanitizers: "ON"
+            ort: "ON"
           - os: macos-latest
             sanitizers: "OFF"
+            ort: "OFF"
 
     steps:
       - name: Checkout repository
@@ -40,11 +42,24 @@ jobs:
         if: runner.os == 'macOS'
         run: brew install libpng
 
+      - name: Install pinned model-reference test dependency
+        if: runner.os == 'Linux'
+        run: python3 -m pip install Pillow==12.3.0
+
+      - name: Install pinned ONNX Runtime CPU (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          curl --fail --location --retry 3 -o ort.tgz https://github.com/microsoft/onnxruntime/releases/download/v1.30.0/onnxruntime-linux-x64-1.30.0.tgz
+          echo 'a5ed5a3cac51fbb2e90da632ae43d19212faaa20e76484e62bcb7c23ddb3b3fd  ort.tgz' | sha256sum --check
+          tar -xzf ort.tgz
+          echo "ORT_ROOT=$PWD/onnxruntime-linux-x64-1.30.0" >> "$GITHUB_ENV"
+
       - name: Configure
         run: >
           cmake -S native -B native/build
           -DCMAKE_BUILD_TYPE=Debug
           -DASL_ENABLE_SANITIZERS=${{ matrix.sanitizers }}
+          -DASL_ONNXRUNTIME_ROOT=${{ env.ORT_ROOT }}
 
       - name: Build
         run: cmake --build native/build --parallel

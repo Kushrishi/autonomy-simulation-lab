@@ -1,6 +1,9 @@
 #include "asl/frame_files.hpp"
 #include "asl/png_decode.hpp"
 #include "asl/replay_manifest.hpp"
+#ifdef ASL_HAS_ORT
+#include "asl/inference.hpp"
+#endif
 
 #include <cstdint>
 #include <iostream>
@@ -28,6 +31,9 @@ void usage() {
         << "  asl-replay validate-manifest MANIFEST.tsv [MAX_RECORDS]\n"
         << "  asl-replay verify-files MANIFEST.tsv [MAX_RECORDS] [MAX_FILE_BYTES]\n"
         << "  asl-replay decode-png IMAGE.png [MAX_PIXELS]\n";
+#ifdef ASL_HAS_ORT
+    std::cerr << "  asl-replay run MANIFEST.tsv --model MODEL.onnx --model-sha SHA256 --out RESULTS.jsonl [--preprocessing CONTRACT]\n";
+#endif
 }
 
 }  // namespace
@@ -41,6 +47,15 @@ int main(int argc, char** argv) {
     const std::string command = argv[1];
 
     try {
+#ifdef ASL_HAS_ORT
+        if (command == "run" && (argc == 9 || argc == 11) && std::string(argv[3]) == "--model" &&
+            std::string(argv[5]) == "--model-sha" && std::string(argv[7]) == "--out") {
+            if(argc==11 && std::string(argv[9])!="--preprocessing")throw std::invalid_argument("expected --preprocessing");
+            asl::replay::run_inference(argv[2], argv[4], argv[6], argv[8],
+                                      argc==11 ? argv[10] : "asl-rgb-bilinear-v1");
+            return 0;
+        }
+#endif
         if (command == "validate-manifest" && argc <= 4) {
             const auto max_records =
                 argc == 4 ? static_cast<std::size_t>(parse_positive(argv[3], "MAX_RECORDS"))

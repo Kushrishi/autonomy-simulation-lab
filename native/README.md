@@ -3,8 +3,11 @@
 This directory contains the native recorded-input path for Autonomy Simulation Lab.
 
 The current boundary validates the manifest and exact frame bytes, then decodes
-PNG inputs into bounded RGB8 buffers. Preprocessing, inference, and visualization
-remain outside this layer.
+PNG inputs into bounded RGB8 buffers. An explicit bilinear RGB8-to-float32 NCHW
+preprocessing boundary now has an independent Python parity test; see
+[the contract](PREPROCESSING.md). Optional pinned ONNX Runtime CPU inference,
+JSONL output and a per-frame comparison command are implemented; see
+[inference contracts and reproduction](INFERENCE.md).
 
 ## Manifest contract
 
@@ -26,7 +29,7 @@ Rules:
 
 Files are hashed with bounded streaming I/O; a complete recording is not loaded into memory.
 PNG decoding additionally enforces a caller-supplied pixel-count limit before allocating
-the RGB output buffer.
+the RGB output buffer. Preprocessing rejects malformed RGB buffers and caps output allocation.
 
 ## Build
 
@@ -56,6 +59,8 @@ Decode one PNG into RGB8:
 ./native/build/asl-replay decode-png path/to/frame.png
 ```
 
-The PNG adapter uses libpng rather than a vendored image decoder. The next native
-boundary is an explicit model-preprocessing contract with an independent reference.
-Model inference remains intentionally later.
+The PNG adapter uses libpng rather than a vendored image decoder. Python 3
+(standard library only) is required for the original preprocessing parity test.
+The optional model-specific parity test requires Pillow 12.3.0. Real-sequence
+validation and visualization remain separate from this native core. No sensor
+fusion, model accuracy, or cross-platform bitwise inference claim is made.
