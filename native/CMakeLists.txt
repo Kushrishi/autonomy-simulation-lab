@@ -40,6 +40,8 @@ if(ASL_ONNXRUNTIME_ROOT)
     target_include_directories(asl-replay SYSTEM PRIVATE "${ORT_INCLUDE}")
     target_link_libraries(asl-replay PRIVATE "${ORT_LIBRARY}")
     target_compile_definitions(asl-replay PRIVATE ASL_HAS_ORT=1)
+    # Installed runner keeps the explicitly configured external runtime location.
+    set_target_properties(asl-replay PROPERTIES INSTALL_RPATH "${ASL_ONNXRUNTIME_ROOT}/lib")
 endif()
 
 enable_testing()
@@ -65,6 +67,8 @@ target_link_libraries(asl_preprocess_probe PRIVATE asl_replay_core)
 add_test(NAME preprocessing_parity COMMAND ${Python3_EXECUTABLE}
     ${CMAKE_CURRENT_SOURCE_DIR}/tests/preprocess_reference.py $<TARGET_FILE:asl_preprocess_probe>)
 if(ASL_ONNXRUNTIME_ROOT)
+    add_test(NAME usability_workflow COMMAND ${Python3_EXECUTABLE}
+        ${CMAKE_CURRENT_SOURCE_DIR}/tests/test_usability.py $<TARGET_FILE:asl-replay>)
     add_test(NAME replay_inference COMMAND ${Python3_EXECUTABLE}
         ${CMAKE_CURRENT_SOURCE_DIR}/tests/test_inference.py $<TARGET_FILE:asl-replay>)
     add_test(NAME model_preprocessing_parity COMMAND ${Python3_EXECUTABLE}
@@ -72,3 +76,7 @@ if(ASL_ONNXRUNTIME_ROOT)
 endif()
 add_test(NAME spatial_adapter_contract COMMAND ${Python3_EXECUTABLE}
     ${CMAKE_CURRENT_SOURCE_DIR}/tests/test_spatial_adapter.py)
+
+install(TARGETS asl-replay RUNTIME DESTINATION bin)
+add_test(NAME fault_tooling_contract COMMAND ${Python3_EXECUTABLE}
+    ${CMAKE_CURRENT_SOURCE_DIR}/tests/test_faults.py)

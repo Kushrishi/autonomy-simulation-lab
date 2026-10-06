@@ -14,11 +14,12 @@ Browser v1.0.0 remains unchanged.
 | Output | Finite float32 JSONL with model/input/recording/config identity and round-trip values; partial failures preserved; no clobber of existing output. |
 | Comparison | Exact identities, missing/extra/order/timestamps, per-frame numerical/structural differences, fixed tolerances and latency distributions. Python CLI remains separate from native runner. |
 | Determinism policy | Exact repeated outputs observed on tested Linux host; general atol=rtol=1e-6 declared before real comparison; no cross-host bitwise claim. |
-| Tests | Eight native CTests locally ASan/UBSan; LeakSanitizer unavailable in Work VM. Linux CI enables ASan/UBSan and inference; macOS CI tests foundation/preprocessing/spatial metadata without ORT. |
+| Tests | Ten native CTests locally ASan/UBSan; LeakSanitizer unavailable in Work VM. Linux CI enables ASan/UBSan and inference; macOS CI tests foundation/preprocessing/spatial metadata without ORT. |
 | CI | PR11 native and browser CI passed; run 37417923250 includes successful build/test on Linux and macOS. |
 | Documentation/example | INFERENCE.md, two contracts, generated model provenance and synthetic manifest/PNG, optional spatial/viewer adapters. |
 
-The end-to-end synthetic release gate is met. Limitations that remain explicit:
+The synthetic engineering boundary is met. The current release gate additionally
+requires real-sequence and real visualization validation; it is **not yet met**. Limitations that remain explicit:
 
 - real KITTI synchronized replay is not validated; official acquisition requires
   an authorized account;
@@ -33,7 +34,15 @@ The end-to-end synthetic release gate is met. Limitations that remain explicit:
 - existing raw-model/caller preprocessing compatibility remains an explicit
   caller responsibility.
 
-Recommended decision: review and approve a bounded native preview release once
-the final evidence package is assessed. Do not label it a complete physical-AI
+Recommended decision: acquire authorized real data and validate synchronized
+replay and visualization before requesting release approval. Do not label it a complete physical-AI
 stack or a sensor-fusion release. A real KITTI example is the next earned
 engineering validation milestone after lawful acquisition.
+
+Fresh-source reproduction on the same Linux host passes ten Release CTests,
+installs the runner and executes the included exact-repeat/fault example. A new
+Python venv uses Pillow 12.3.0; pinned ORT/libpng dependencies are shared from
+the recorded local prefixes. This is not a clean-OS or independent reproduction.
+The fault/benchmark tooling is bounded and synthetic; spatial-state faults do
+not imply a downstream image-inference effect. Calibration rejects non-rigid
+rotation matrices; analytical WGS84/ENU axis and antimeridian tests pass.

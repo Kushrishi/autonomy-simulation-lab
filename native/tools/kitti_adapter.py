@@ -79,6 +79,26 @@ def enu(position, origin):
     ]
 
 
+def validate_rotation(values, tolerance=1e-5):
+    """Row-major proper rotation: orthonormal rows and determinant +1.
+
+    Tolerance admits rounding in text calibration exports, not arbitrary scale,
+    shear or reflections. This does not establish real-data extrinsic accuracy.
+    """
+    if len(values) != 9 or not all(math.isfinite(v) for v in values):
+        raise ValueError("invalid rotation matrix")
+    rows = [values[i : i + 3] for i in (0, 3, 6)]
+    for i in range(3):
+        for j in range(3):
+            dot = sum(a * b for a, b in zip(rows[i], rows[j]))
+            if abs(dot - (1 if i == j else 0)) > tolerance:
+                raise ValueError("calibration rotation is not orthonormal")
+    a, b, c, d, e, f, g, h, i = values
+    determinant = a * (e * i - f * h) - b * (d * i - f * g) + c * (d * h - e * g)
+    if abs(determinant - 1) > tolerance:
+        raise ValueError("calibration rotation must have determinant +1")
+
+
 def adapt(sequence, calibration, limit=12, max_skew_ns=50_000_000):
     sequence, calibration = Path(sequence).resolve(), Path(calibration).resolve()
     if not sequence.name.endswith("_sync") or not 1 <= limit <= 1000 or max_skew_ns < 0:
@@ -113,6 +133,8 @@ def adapt(sequence, calibration, limit=12, max_skew_ns=50_000_000):
             expected = 12 if key == "P_rect_02" else 3 if key == "T" else 9
             if len(values) != expected or not all(math.isfinite(v) for v in values):
                 raise ValueError("invalid calibration values")
+            if key in ("R", "R_rect_00"):
+                validate_rotation(values)
         calibration_hashes[name] = digest(path)
     lines = ["frame_id\ttimestamp_ns\tpath\tsha256"]
     spatial, origin = [], None

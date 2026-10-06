@@ -67,6 +67,45 @@ def main(binary):
                 text=True,
             )
 
+        assert (
+            subprocess.run(
+                [binary, "--help"], check=False, capture_output=True
+            ).returncode
+            == 0
+        )
+        permuted = subprocess.run(
+            [
+                binary,
+                "run",
+                str(manifest),
+                "--out",
+                str(folder / "permuted.jsonl"),
+                "--preprocessing",
+                "asl-rgb-bilinear-v1",
+                "--model-sha",
+                digest,
+                "--model",
+                str(model),
+            ],
+            check=False,
+            capture_output=True,
+            text=True,
+        )
+        assert permuted.returncode == 0, permuted.stderr
+        for extra, message in [
+            (["--unknown", "x"], "unknown run option"),
+            (["--model", str(model), "--model", str(model)], "duplicate run option"),
+            (["--model"], "missing value"),
+            ([], "required run option"),
+        ]:
+            bad_cli = subprocess.run(
+                [binary, "run", str(manifest)] + extra,
+                check=False,
+                capture_output=True,
+                text=True,
+            )
+            assert bad_cli.returncode != 0 and message in bad_cli.stderr
+
         all_runs = []
         for i in range(3):
             result = run(f"run{i}.jsonl")

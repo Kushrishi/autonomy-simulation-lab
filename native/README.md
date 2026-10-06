@@ -9,6 +9,10 @@ preprocessing boundary now has an independent Python parity test; see
 JSONL output and a per-frame comparison command are implemented; see
 [inference contracts and reproduction](INFERENCE.md).
 
+For a complete install, two-run comparison, identified fault and bounded
+benchmark, see [USABILITY.md](USABILITY.md). Authorized real-data acquisition
+is described in [ACQUISITION.md](ACQUISITION.md).
+
 ## Manifest contract
 
 Tab-separated UTF-8 with the exact header:

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import io
 import json
 import math
 import re
@@ -10,14 +11,23 @@ from pathlib import Path
 
 
 def load(path):
-    if Path(path).stat().st_size > 134217728:
+    with Path(path).open("rb") as source:
+        data = source.read(134217729)
+    return loads(data)
+
+
+def loads(data):
+    if len(data) > 134217728:
         raise ValueError("result file exceeds 128 MiB bound")
     records = []
-    with Path(path).open() as stream:
+    total_values = 0
+    with io.StringIO(data.decode("utf-8")) as stream:
         for line in stream:
             if len(line) > 32_000_000 or len(records) >= 10_000:
                 raise ValueError("record bound exceeded")
             row = json.loads(line)
+            if not isinstance(row, dict):
+                raise TypeError("record must be an object")
             if row.get("schema") != "asl-replay-v1":
                 raise ValueError("unsupported schema")
             required = (
@@ -52,20 +62,45 @@ def load(path):
                 raise ValueError("unsupported dtype")
             values = row["output"]
             if (
-                not values
+                not isinstance(values, list)
+                or not values
                 or len(values) > 1_000_000
-                or not all(
-                    isinstance(v, (int, float)) and math.isfinite(v) for v in values
-                )
+                or not all(type(v) in (int, float) and math.isfinite(v) for v in values)
             ):
                 raise ValueError("invalid numerical output")
             shape = row["output_shape"]
             if (
-                not shape
-                or any(not isinstance(v, int) or v <= 0 for v in shape)
+                not isinstance(shape, list)
+                or not shape
+                or any(type(v) is not int or v <= 0 for v in shape)
                 or math.prod(shape) != len(values)
             ):
                 raise ValueError("output shape mismatch")
+            total_values += len(values)
+            if total_values > 10_000_000:
+                raise ValueError("aggregate numerical output bound exceeded")
+            if any(
+                not isinstance(row[k], str) or not row[k]
+                for k in ("preprocessing", "runtime", "provider", "graph_optimization")
+            ):
+                raise ValueError("invalid configuration identity")
+            if type(row["threads"]) is not int or row["threads"] <= 0:
+                raise ValueError("invalid thread count")
+            top = row["top_indices"]
+            if (
+                not isinstance(top, list)
+                or any(type(i) is not int for i in top)
+                or top != sorted(range(len(values)), key=lambda i: (-values[i], i))[:5]
+            ):
+                raise ValueError("invalid stable top indices")
+            latency = row["latency_ms"]
+            if not isinstance(latency, dict) or any(
+                type(latency.get(k)) not in (int, float)
+                or not math.isfinite(latency[k])
+                or latency[k] < 0
+                for k in ("decode", "preprocess", "inference", "total")
+            ):
+                raise ValueError("invalid stage latency")
             records.append(row)
     ids = [r["frame_id"] for r in records]
     if not ids or len(set(ids)) != len(ids):
@@ -144,8 +179,7 @@ def compare(baseline, candidate, atol=1e-6, rtol=1e-6):
         for stage in ("decode", "preprocess", "inference", "total"):
             values = [r["latency_ms"][stage] for r in records]
             if not all(
-                isinstance(v, (int, float)) and math.isfinite(v) and v >= 0
-                for v in values
+                type(v) in (int, float) and math.isfinite(v) and v >= 0 for v in values
             ):
                 raise ValueError("invalid latency")
             report["latency_ms"][label][stage] = {
@@ -162,7 +196,12 @@ def main():
     parser.add_argument("--atol", type=float, default=1e-6)
     parser.add_argument("--rtol", type=float, default=1e-6)
     args = parser.parse_args()
-    report = compare(load(args.baseline), load(args.candidate), args.atol, args.rtol)
+    try:
+        report = compare(
+            load(args.baseline), load(args.candidate), args.atol, args.rtol
+        )
+    except (ValueError, OSError, KeyError, TypeError) as error:
+        parser.exit(2, f"comparison input failed: {error}\n")
     print(json.dumps(report, indent=2, allow_nan=False))
     return (
         1
