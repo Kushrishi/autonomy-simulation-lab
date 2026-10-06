@@ -69,6 +69,7 @@ void run_inference(const std::filesystem::path& manifest,
     std::ofstream stream(partial);
     stream.exceptions(std::ios::badbit | std::ios::failbit);
     stream << std::setprecision(9);
+    std::size_t total_output_elements=0;
     for (const auto& frame : frames) {
         const auto start=Clock::now();
         // Recheck identity immediately before decode to detect intervening changes.
@@ -88,6 +89,8 @@ void run_inference(const std::filesystem::path& manifest,
             throw std::runtime_error("float32 output required");
         auto count=info.GetElementCount();
         if (count==0 || count>1000000) throw std::runtime_error("output element bound exceeded");
+        total_output_elements+=count;
+        if(total_output_elements>10000000)throw std::runtime_error("recording output element bound exceeded");
         const auto values=results[0].GetTensorData<float>();
         for (std::size_t i=0;i<count;++i) if (!std::isfinite(values[i])) throw std::runtime_error("nonfinite model output");
         stream << "{\"schema\":\"asl-replay-v1\",\"frame_id\":" << quote(frame.record.frame_id)
@@ -110,6 +113,7 @@ void run_inference(const std::filesystem::path& manifest,
         stream << "],\"latency_ms\":{\"verify\":" << ms(start,verified) << ",\"decode\":" << ms(verified,decoded)
                << ",\"preprocess\":" << ms(decoded,preprocessed) << ",\"inference\":" << ms(preprocessed,inferred)
                << ",\"total\":" << ms(start,inferred) << "}}\n";
+        if(stream.tellp()>std::streamoff(134217728))throw std::runtime_error("128 MiB output file bound exceeded");
     }
     stream.close();
     // Atomic no-clobber publication on the same filesystem.

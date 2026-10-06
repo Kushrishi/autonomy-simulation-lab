@@ -10,6 +10,8 @@ from pathlib import Path
 
 
 def load(path):
+    if Path(path).stat().st_size > 134217728:
+        raise ValueError("result file exceeds 128 MiB bound")
     records = []
     with Path(path).open() as stream:
         for line in stream:
