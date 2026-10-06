@@ -51,16 +51,15 @@ contract on tested fixtures, not ImageNet accuracy or universal Pillow equality.
 
 ## Reproduce
 
-Install libpng development headers, download/hash/extract the pinned ORT package
-outside the repository, and install Pillow 12.3.0 for the model-specific test.
+Follow [the complete build/install/example workflow](USABILITY.md). It creates
+both baseline and candidate records and a separately identified numerical fault.
+The shorter command reference remains:
 
 ```bash
-cmake -S native -B native/build -DASL_ONNXRUNTIME_ROOT=/absolute/path/onnxruntime-linux-x64-1.30.0
-cmake --build native/build --parallel
-ctest --test-dir native/build --output-on-failure
-./native/build/asl-replay run native/examples/synthetic/manifest.tsv --model native/tests/fixtures/channel_means.onnx --model-sha 436aa6e3a86b7d5d82af06c55060eb0ca3d8ca07cc60879d05fcd39e446130a0 --out baseline.jsonl
-python3 native/tools/compare.py baseline.jsonl candidate.jsonl
+asl-replay run MANIFEST --model MODEL --model-sha SHA --out RESULTS [--preprocessing CONTRACT]
+python3 native/tools/compare.py BASELINE CANDIDATE
 ```
+Named run options may be reordered; duplicates and missing values fail.
 
 For MobileNet explicitly append `--preprocessing asl-imagenet-center-v1` and
 use its pinned model/hash. A model hash alone does not prove preprocessing

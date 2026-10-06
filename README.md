@@ -9,11 +9,11 @@ Two layers answer different parts of that question:
 | Layer | Current capability | Status |
 | --- | --- | --- |
 | Browser v1 | Interactive planning, noisy localization, state estimation and telemetry export | Stable [v1.0.0](https://github.com/Kushrishi/autonomy-simulation-lab/releases/tag/v1.0.0) |
-| Native C++ | Manifest and timestamp contracts, file identity, SHA-256 integrity and bounded RGB8 PNG decoding | Replay foundation; preprocessing, inference, viewer integration and regression comparison remain planned |
+| Native C++ | Manifest/timestamp and consumed-byte identity, bounded PNG, preprocessing, CPU inference and structured output comparison | Synthetic end-to-end verified; real sensor-sequence and viewer validation pending |
 
 [Live simulator](https://kushrishi.github.io/autonomy-simulation-lab/) · [System overview](https://kushrishi.com/projects/autonomy-simulation-lab) · [Native contracts and tests](native/README.md) · [MIT license](LICENSE)
 
-The browser is a simplified experimental environment, not a real autonomous vehicle stack. The native layer makes input identity, failure handling and reproducibility explicit before adding model execution.
+The browser is a simplified experimental environment, not a real autonomous vehicle stack. The native layer makes input identity, model execution, failure handling and reproducibility explicit. Real sensor-sequence validation remains pending.
 
 ## Preview
 

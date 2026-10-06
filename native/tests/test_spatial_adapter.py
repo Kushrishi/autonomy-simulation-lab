@@ -32,6 +32,23 @@ def fixture(root):
 
 
 def main():
+    # Analytical WGS84 axis cases and ENU sign/boundary checks, no outcome data.
+    assert adapter.ecef(0, 0, 0) == [6378137.0, 0.0, 0.0]
+    assert abs(adapter.ecef(90, 0, 0)[2] - 6356752.314245179) < 1e-6
+    east = adapter.enu([0, 1e-5, 0], [0, 0, 0])
+    north = adapter.enu([1e-5, 0, 0], [0, 0, 0])
+    assert 1.11 < east[0] < 1.12 and abs(east[1]) < 1e-9
+    assert 1.10 < north[1] < 1.11 and abs(north[0]) < 1e-9
+    seam = adapter.enu([0, -179.99999, 0], [0, 179.99999, 0])
+    assert 2.22 < seam[0] < 2.23  # antimeridian, not a globe-spanning jump
+    adapter.validate_rotation([0, -1, 0, 1, 0, 0, 0, 0, 1])
+    for invalid in ([2, 0, 0, 0, 1, 0, 0, 0, 1], [-1, 0, 0, 0, 1, 0, 0, 0, 1]):
+        try:
+            adapter.validate_rotation(invalid)
+        except ValueError:
+            pass
+        else:
+            raise AssertionError("non-rigid/reflected calibration accepted")
     assert adapter.timestamp_ns("2011-09-26 13:02:45.000000001") % 1_000_000_000 == 1
     assert max(abs(v) for v in adapter.enu([49.0, 8.0, 100.0], [49.0, 8.0, 100.0])) == 0
     up = adapter.enu([49.0, 8.0, 101.0], [49.0, 8.0, 100.0])
@@ -53,6 +70,7 @@ def main():
         "nonmonotonic",
         "missing_pose",
         "bad_calibration",
+        "nonrigid_calibration",
         "nonfinite_pose",
     ):
         with tempfile.TemporaryDirectory() as temp:
@@ -67,6 +85,10 @@ def main():
                 (seq / "oxts/data/0000000001.txt").unlink()
             elif fault == "bad_calibration":
                 (calib / "calib_imu_to_velo.txt").write_text("R: 1\nT: 0 0 0\n")
+            elif fault == "nonrigid_calibration":
+                (calib / "calib_imu_to_velo.txt").write_text(
+                    "R: 2 0 0 0 1 0 0 0 1\nT: 0 0 0\n"
+                )
             else:
                 p = seq / "oxts/data/0000000000.txt"
                 p.write_text(p.read_text().replace("49.0", "nan"))
@@ -82,7 +104,7 @@ def main():
                 "synthetic_only": True,
                 "WGS84_ENU": "passed",
                 "nanosecond_precision": "passed",
-                "faults": 5,
+                "faults": 6,
             }
         )
     )
