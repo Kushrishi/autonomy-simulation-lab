@@ -44,6 +44,7 @@ restricts independent noncommercial use, obtain clarification rather than
 misstating an academic affiliation.
 
 After legal acquisition, use the existing adapter as documented in
-[SPATIAL.md](SPATIAL_ADAPTERS.md). Real-sequence validation, real Rerun inspection and
-performance characterization remain unmet release gates. No sensor fusion is
+[SPATIAL.md](SPATIAL_ADAPTERS.md). [The 7 October validation record](REAL_SEQUENCE_VALIDATION_2026_10.md) documents
+complete real-sequence replay, MobileNet repeats and RRD export/reopen. Interactive
+viewer inspection remains open; import/export has one warm-cache timing observation. No sensor fusion is
 claimed. No release or project rename is authorized by acquisition alone.
