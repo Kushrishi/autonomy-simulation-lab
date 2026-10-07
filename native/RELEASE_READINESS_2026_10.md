@@ -46,3 +46,12 @@ the recorded local prefixes. This is not a clean-OS or independent reproduction.
 The fault/benchmark tooling is bounded and synthetic; spatial-state faults do
 not imply a downstream image-inference effect. Calibration rejects non-rigid
 rotation matrices; analytical WGS84/ENU axis and antimeridian tests pass.
+
+## 7 October evidence update
+
+[Authorized real-sequence validation](REAL_SEQUENCE_VALIDATION_2026_10.md) now
+covers all 108 synced frames, repeated MobileNet, controlled faults, spatial
+conversion and complete RRD export/reopen. The preceding 6 October statements
+about absent real replay describe the earlier boundary. Interactive viewer QA,
+durable protected-data handoff and independent installation remain open; no
+release/tag is approved.
