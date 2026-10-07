@@ -1,25 +1,25 @@
 # Local sequence and viewer adapters
 
 These adapters keep visualization and dataset-specific parsing outside the C++
-core. They are tested with project-generated synthetic data. **A real KITTI
-sequence has not yet been acquired or validated.**
+core. They are tested with project-generated synthetic data and the complete authorized
+108-frame KITTI sequence; see [the evidence](REAL_SEQUENCE_VALIDATION_2026_10.md).
+**Human interactive viewer QA remains open.**
 
 ## KITTI access boundary
 
 Official raw-data source: https://www.cvlibs.net/datasets/kitti/raw_data.php
 and policy: https://www.cvlibs.net/datasets/kitti/user_login.php.
 Current official downloads require registration, purpose declaration and login.
-Do not bypass this with mirrors. No account was created and no dataset was
-downloaded in this implementation pass. Dataset terms remain the user's
+Do not bypass this with mirrors. The owner supplied authorized access for the
+7 October acquisition. Dataset terms remain the user's
 responsibility at acquisition; raw data is never committed or packaged here.
 
-Provisional first example: `2011_09_26_drive_0001_sync`, first 12 color-camera
-`image_02` frames, matching OXTS records/timestamps and the date's calibration.
-That identity is a plan, not an acquired/verified recording. Once lawfully
-acquired, use the synchronized/rectified variant and run:
+Validated example: `2011_09_26_drive_0001_sync`, all 108 color-camera `image_02`
+frames, matching OXTS records/timestamps and the date's calibration. After obtaining
+the official synchronized/rectified archive with authorized access, run:
 
 ```bash
-python3 native/tools/kitti_adapter.py /local/2011_09_26_drive_0001_sync /local/2011_09_26 --limit 12
+python3 native/tools/kitti_adapter.py /local/2011_09_26_drive_0001_sync /local/2011_09_26 --limit 1000
 ```
 
 The local adapter creates `asl-manifest.tsv`, `asl-spatial.jsonl` and a provenance
@@ -63,8 +63,9 @@ Without spatial/comparison inputs, those channels are simply absent. The adapter
 checks manifest/frame/result identity and timestamps, then logs camera images,
 elapsed/frame timelines, top indices, latency and regression flags. Spatial data
 adds ENU position and stream skew. A synthetic MobileNet replay export was
-generated and reopened using the pinned CLI's RRD verification. No real-sequence
-visualization or viewer interaction quality is claimed yet.
+generated and reopened using the pinned CLI's RRD verification. Complete real-sequence
+export/reopen passed; interactive viewer usability still
+requires human inspection.
 
 Viewer validation is SDK-independent and runs in CI. It requires exact ordered
 manifest/result/spatial coverage, matching timestamps and input hashes, finite
@@ -79,4 +80,4 @@ uses exclusive reservation; an SDK/I/O failure may preserve a partial owned RRD.
 Keep the transparent TSV manifest for this boundary. MCAP is a later adapter if
 real users/interoperability justify it; replacing the working format now would
 not answer a new engineering question. Native release readiness is assessed
-separately. Real data and full spatial fault visualization remain next.
+separately. Real data passed import/replay; human graphical QA remains a release gate.

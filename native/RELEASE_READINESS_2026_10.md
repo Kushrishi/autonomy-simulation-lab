@@ -55,3 +55,7 @@ conversion and complete RRD export/reopen. The preceding 6 October statements
 about absent real replay describe the earlier boundary. Interactive viewer QA,
 durable protected-data handoff and independent installation remain open; no
 release/tag is approved.
+
+## 7 October fresh-source release-candidate audit
+
+The [fresh-source reproduction](CLEANROOM_REPRODUCTION_2026_10.md) passes the documented installed synthetic example, faults, structured report, benchmark and Rerun export/reopen. A fresh authorized import and all-108-frame MobileNet run compare exactly with the retained baseline. Shared native dependency prefixes and the same Linux host limit the independence claim. The protected-data-complete private handoff exists. Human graphical QA remains OPEN; no release/tag, rename or additional workload is approved.
