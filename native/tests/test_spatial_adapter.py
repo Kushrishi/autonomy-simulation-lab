@@ -149,6 +149,33 @@ def main():
                     and row["geodetic_lat_lon_alt"][0] == 49
                 )
     print("metadata read/parse/hash snapshot identity passed for four source types")
+    # Prefix selection must not hide an invalid complete source inventory.
+    for stream, suffix in (("image_02", ".png"), ("oxts", ".txt")):
+        for fault in ("extra", "missing_unselected", "malformed", "directory"):
+            with tempfile.TemporaryDirectory() as temp:
+                seq, calib = fixture(Path(temp))
+                directory = seq / stream / "data"
+                if fault == "extra":
+                    (directory / f"0000000002{suffix}").write_bytes(b"extra")
+                elif fault == "missing_unselected":
+                    (directory / f"0000000001{suffix}").unlink()
+                elif fault == "malformed":
+                    (directory / f"1{suffix}").write_bytes(b"duplicate index")
+                else:
+                    (directory / f"0000000001{suffix}").unlink()
+                    (directory / f"0000000001{suffix}").mkdir()
+                try:
+                    adapter.adapt(seq, calib, 1)
+                except ValueError:
+                    assert not (seq / "asl-manifest.tsv").exists()
+                else:
+                    raise AssertionError(f"undetected inventory fault: {stream}/{fault}")
+    with tempfile.TemporaryDirectory() as temp:
+        seq, calib = fixture(Path(temp))
+        _, _, provenance = adapter.adapt(seq, calib, 1)
+        proof = json.loads(provenance.read_text())
+        assert proof["source_frames"] == 2 and proof["frames"] == 1
+    print("complete camera/OXTS inventory validated before prefix selection")
 
 
 if __name__ == "__main__":

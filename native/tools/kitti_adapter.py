@@ -11,6 +11,7 @@ import datetime as dt
 import hashlib
 import json
 import math
+import os
 from itertools import pairwise
 from pathlib import Path
 
@@ -111,6 +112,21 @@ def validate_rotation(values, tolerance=1e-5):
         raise ValueError("calibration rotation must have determinant +1")
 
 
+def validate_inventory(directory, suffix, count):
+    """Check complete index-aligned names without opening source payloads."""
+    expected = {f"{i:010}{suffix}" for i in range(count)}
+    found = set()
+    with os.scandir(directory) as entries:
+        for index, entry in enumerate(entries):
+            if index >= 10000:
+                raise ValueError("frame inventory exceeds adapter entry bound")
+            if entry.name not in expected or not entry.is_file():
+                raise ValueError("unexpected frame inventory entry")
+            found.add(entry.name)
+    if found != expected:
+        raise ValueError("frame inventory does not match timestamp count")
+
+
 def adapt(sequence, calibration, limit=12, max_skew_ns=50_000_000):
     sequence, calibration = Path(sequence).resolve(), Path(calibration).resolve()
     if not sequence.name.endswith("_sync") or not 1 <= limit <= 1000 or max_skew_ns < 0:
@@ -121,6 +137,8 @@ def adapt(sequence, calibration, limit=12, max_skew_ns=50_000_000):
     pose = times(None, pose_bytes)
     if len(camera) != len(pose):
         raise ValueError("camera/OXTS timestamp counts differ")
+    validate_inventory(sequence / "image_02/data", ".png", len(camera))
+    validate_inventory(sequence / "oxts/data", ".txt", len(pose))
     outputs = [
         sequence / n
         for n in ("asl-manifest.tsv", "asl-spatial.jsonl", "asl-provenance.json")
@@ -193,6 +211,7 @@ def adapt(sequence, calibration, limit=12, max_skew_ns=50_000_000):
                 "sequence": sequence.name,
                 "selection": "first index-aligned frames",
                 "frames": len(spatial),
+                "source_frames": len(camera),
                 "max_skew_ns": max_skew_ns,
                 "timestamp_interpretation": "naive KITTI clock represented as UTC; absolute UTC accuracy not claimed",
                 "coordinate_frame": "WGS84 ECEF to ENU at first OXTS position; metres",
