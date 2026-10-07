@@ -25,7 +25,11 @@ python3 native/tools/kitti_adapter.py /local/2011_09_26_drive_0001_sync /local/2
 The local adapter creates `asl-manifest.tsv`, `asl-spatial.jsonl` and a provenance
 record inside the local sequence directory; existing outputs are never replaced.
 Camera/OXTS counts must agree; each selected index has a finite 30-field OXTS
-record. BOTH timestamps remain recorded. Maximum absolute skew defaults to a
+record. Both source directories must contain exactly the zero-padded frame IDs
+implied by their full timestamp streams, even when a prefix is selected. Missing,
+extra, malformed names and directory entries fail before output publication;
+enumeration is bounded to 10,000 entries per stream. Provenance records both
+source and selected frame counts. BOTH timestamps remain recorded. Maximum absolute skew defaults to a
 declared 50 ms, configurable before analysis. Timestamps preserve nanoseconds;
 their naive dataset clock is represented as UTC without claiming absolute UTC
 accuracy. Missing, malformed, nonmonotonic or excessively skewed streams fail.
