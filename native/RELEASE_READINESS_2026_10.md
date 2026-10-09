@@ -59,3 +59,12 @@ release/tag is approved.
 ## 7 October fresh-source release-candidate audit
 
 The [fresh-source reproduction](CLEANROOM_REPRODUCTION_2026_10.md) passes the documented installed synthetic example, faults, structured report, benchmark and Rerun export/reopen. A fresh authorized import and all-108-frame MobileNet run compare exactly with the retained baseline. Shared native dependency prefixes and the same Linux host limit the independence claim. The protected-data-complete private handoff exists. Human graphical QA remains OPEN; no release/tag, rename or additional workload is approved.
+
+## 9 October objective graphical evidence
+
+[Actual Rerun rendered views](GRAPHICAL_QA_2026_10_09.md) were inspected at frame
+0, 53 and 107 with camera, ENU position history, skew, model-output and latency
+channels visible. All 108 viewer cursor positions passed SDK readback checks.
+This improves the prior export/reopen boundary. Human interactive usability
+remains OPEN; the private screenshots and RRD are not public artifacts. No
+release/tag or broader determinism claim follows from this inspection.
