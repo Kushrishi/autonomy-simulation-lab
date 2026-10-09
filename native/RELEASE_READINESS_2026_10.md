@@ -86,3 +86,13 @@ channels visible. All 108 viewer cursor positions passed SDK readback checks.
 This improves the prior export/reopen boundary. Human interactive usability
 remains OPEN; the private screenshots and RRD are not public artifacts. No
 release/tag or broader determinism claim follows from this inspection.
+
+## Installed workflow integration — 9 October 2026
+
+Recording import and Rerun export tools are now installed alongside comparison.
+Actual configuration comparison retains `comparison.json`, directly accepted by
+the viewer with result-identity validation. The relocated-install test exercises
+two native runs and candidate-to-viewer preparation without source imports or
+Rerun installed. See [the complete walkthrough](INSTALLED_RECORDING_WORKFLOW.md).
+This closes a packaging/integration gap; it does not claim a new real-sequence
+execution or human desktop acceptance.

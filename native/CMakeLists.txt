@@ -103,6 +103,7 @@ install(TARGETS asl-replay RUNTIME DESTINATION bin)
 install(PROGRAMS tools/asl-example DESTINATION bin)
 install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/../LICENSE" DESTINATION share/asl-replay)
 install(FILES tools/example.py tools/compare.py tools/faults.py tools/benchmark.py tools/compare_configurations.py
+    tools/kitti_adapter.py tools/rerun_adapter.py
     DESTINATION share/asl-replay/tools)
 install(DIRECTORY examples/synthetic DESTINATION share/asl-replay/examples)
 install(FILES tests/fixtures/channel_means.onnx DESTINATION share/asl-replay/tests/fixtures)
@@ -110,3 +111,6 @@ add_test(NAME fault_tooling_contract COMMAND ${Python3_EXECUTABLE}
     ${CMAKE_CURRENT_SOURCE_DIR}/tests/test_faults.py)
 add_test(NAME viewer_snapshot_contract COMMAND ${Python3_EXECUTABLE}
     ${CMAKE_CURRENT_SOURCE_DIR}/tests/test_viewer_boundary.py)
+
+install(FILES USABILITY.md SPATIAL_ADAPTERS.md INFERENCE.md INSTALLED_RECORDING_WORKFLOW.md
+    DESTINATION share/asl-replay/docs)

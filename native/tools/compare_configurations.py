@@ -90,6 +90,7 @@ def run(binary, manifest, model, model_sha, output, baseline, candidate, timeout
             "cpu_seconds": None,
             "peak_rss": None,
         }
+        write(output / "comparison.json", comparison)
         write(output / "report.json", report)
         return report
     except (
@@ -143,6 +144,7 @@ def main():
         json.dumps(
             {
                 "report": str(args.output / "report.json"),
+                "viewer_comparison": str(args.output / "comparison.json"),
                 "changed_frames": len(comparison["changed_frames"]),
                 "numerically_changed_frames": sum(
                     r["numerical_changed"] for r in comparison["frames"]
