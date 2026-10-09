@@ -1,5 +1,6 @@
 """Snapshot-bound viewer input without an optional SDK or external dataset."""
 
+import copy
 import hashlib
 import json
 import sys
@@ -10,6 +11,7 @@ from types import SimpleNamespace
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "tools"))
 import kitti_adapter as adapter
 import rerun_adapter as viewer
+from compare import compare
 from test_faults import record
 from test_spatial_adapter import fixture
 
@@ -33,6 +35,43 @@ def main():
         results.write_text("".join(json.dumps(r) + "\n" for r in rows))
         identity, _, poses, _, images = viewer.prepare(manifest, results, spatial)
         assert identity == hashlib.sha256(source).hexdigest() and len(poses) == 2
+        # Matching frame IDs alone cannot bind a highlight report to this replay.
+        candidate = copy.deepcopy(rows)
+        candidate[0]["output"][0] += 0.25
+        report = compare(rows, candidate, atol=0, rtol=0)
+        comparison = root / "comparison.json"
+        comparison.write_text(json.dumps(report))
+        assert viewer.prepare(manifest, results, comparison=comparison)[3] == {
+            rows[0]["frame_id"]
+        }
+        candidate_results = root / "candidate.jsonl"
+        candidate_results.write_text("".join(json.dumps(r) + "\n" for r in candidate))
+        assert viewer.prepare(manifest, candidate_results, comparison=comparison)[3] == {
+            rows[0]["frame_id"]
+        }
+        for fault in ("unbound", "stale", "string", "duplicate", "unknown", "object"):
+            bad = copy.deepcopy(report)
+            if fault == "unbound":
+                del bad["result_identities"]
+            elif fault == "stale":
+                unrelated = copy.deepcopy(rows)
+                unrelated[0]["latency_ms"]["total"] += 1
+                bad = compare(unrelated, unrelated)
+            elif fault == "string":
+                bad["changed_frames"] = rows[0]["frame_id"]
+            elif fault == "duplicate":
+                bad["changed_frames"] *= 2
+            elif fault == "unknown":
+                bad["changed_frames"] = ["absent"]
+            else:
+                bad = []
+            comparison.write_text(json.dumps(bad))
+            try:
+                viewer.prepare(manifest, results, comparison=comparison)
+            except ValueError:
+                pass
+            else:
+                raise AssertionError("unbound/malformed comparison accepted: " + fault)
         image = seq / "image_02/data/0000000000.png"
         original = image.read_bytes()
         image.write_bytes(b"replacement")
@@ -119,7 +158,7 @@ def main():
                 del sys.modules["rerun"]
             else:
                 sys.modules["rerun"] = prior
-    print("viewer snapshots, exact frame coverage, metadata and seven faults passed")
+    print("viewer snapshots, coverage, metadata and comparison identity faults passed")
 
 
 if __name__ == "__main__":

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import io
 import json
 import math
@@ -116,12 +117,24 @@ def percentile(values, p):
     return values[lo] + (values[hi] - values[lo]) * (x - lo)
 
 
+def result_digest(records):
+    """Identify the complete ordered parsed results, including measured latency."""
+    data = json.dumps(
+        records, sort_keys=True, separators=(",", ":"), allow_nan=False
+    ).encode("utf-8")
+    return hashlib.sha256(data).hexdigest()
+
+
 def compare(baseline, candidate, atol=1e-6, rtol=1e-6):
     if not math.isfinite(atol) or not math.isfinite(rtol) or min(atol, rtol) < 0:
         raise ValueError("invalid tolerance")
     a, b = {r["frame_id"]: r for r in baseline}, {r["frame_id"]: r for r in candidate}
     common = [r["frame_id"] for r in baseline if r["frame_id"] in b]
     report = {
+        "result_identities": {
+            "baseline": result_digest(baseline),
+            "candidate": result_digest(candidate),
+        },
         "tolerance": {"atol": atol, "rtol": rtol},
         "missing": sorted(a.keys() - b.keys()),
         "extra": sorted(b.keys() - a.keys()),
