@@ -93,3 +93,28 @@ Linux host; it is not an independent external reproduction or clean operating
 system certification. The complete [108-frame real sequence](REAL_SEQUENCE_VALIDATION_2026_10.md) has
 passed import/replay/export/reopen. Human interactive viewer QA remains required
 before the current native release gate is met. See the [fresh-source audit](CLEANROOM_REPRODUCTION_2026_10.md). No tag/release is created.
+
+## Desktop acceptance of the retained recording
+
+Use the existing authorized 108-frame RRD and its inspection blueprint with
+Rerun 0.38.1. Keep the KITTI-derived recording, screenshots and paths private.
+Do not rerun inference or acquire another recording for this check. If the RRD
+or blueprint is unavailable on the inspection machine, recover the retained
+package first; representative screenshots are not a substitute.
+
+Record the viewer version, OS, recording hash and whether a blueprint was used.
+Then perform these actions with ordinary mouse/keyboard input:
+
+1. Open the recording and confirm the frame timeline covers 0–107.
+2. Scrub and step through frames 0, 53 and 107. Confirm that camera imagery and
+   the displayed model/timing state follow the selected frame without stale panels.
+3. Pan/zoom the ENU view, return to the full trajectory, and confirm that the
+   controls remain usable. Appearance does not verify geodetic accuracy.
+4. Read the camera/OXTS skew and inference/total-latency panels at each selected
+   frame. Check for hidden panels, unreadable labels or visible warnings.
+5. Close/reopen the same recording and repeat the beginning/end navigation.
+
+Write a dated text result for each action: pass, fail or not tested, with actual
+setup/navigation problems. Do not infer responsiveness or ease of use from
+headless SDK cursor control. A failure should lead to a bounded usability fix;
+passing this check does not authorize a release or establish cross-host inference.
