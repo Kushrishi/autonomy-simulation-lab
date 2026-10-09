@@ -11,10 +11,12 @@ require Pillow 12.3.0 and the pinned ONNX Runtime distribution below.
 
 ## Linux x64 CPU inference: complete fresh-checkout workflow
 
-After cloning the repository, run from its root. Downloads are external to Git;
-the installed executable retains the explicitly configured ORT library path.
-Moving/removing that runtime directory invalidates the installation. This is not
-a portable binary bundle. Native CI exercises pinned CPU inference on Linux
+After cloning the repository, run from its root. Downloads are external to Git.
+The commands below bundle ONNX Runtime, the synthetic example and its tools into
+the installation. Move the entire installation directory; the original checkout
+and runtime extraction folder are not needed to run the installed example.
+System libpng, zlib, Python 3 and a compatible OS/C++ runtime remain required.
+Native CI exercises pinned CPU inference on Linux
 x86_64 and macOS arm64 with synthetic inputs. Each platform checks its own
 repeat runs; this does not establish cross-platform numerical equivalence or
 human desktop usability. The x64 Linux archive below is not a macOS dependency.
@@ -26,14 +28,14 @@ printf '%s  %s\n' a5ed5a3cac51fbb2e90da632ae43d19212faaa20e76484e62bcb7c23ddb3b3
 tar -xzf "$ASL_WORKDIR/ort.tgz" -C "$ASL_WORKDIR"
 python3 -m venv "$ASL_WORKDIR/python"
 "$ASL_WORKDIR/python/bin/pip" install Pillow==12.3.0
-cmake -S native -B "$ASL_WORKDIR/build" -DCMAKE_BUILD_TYPE=Release -DASL_ONNXRUNTIME_ROOT="$ASL_WORKDIR/onnxruntime-linux-x64-1.30.0" -DPython3_EXECUTABLE="$ASL_WORKDIR/python/bin/python"
+cmake -S native -B "$ASL_WORKDIR/build" -DCMAKE_BUILD_TYPE=Release -DASL_ONNXRUNTIME_ROOT="$ASL_WORKDIR/onnxruntime-linux-x64-1.30.0" -DASL_BUNDLE_ONNXRUNTIME=ON -DPython3_EXECUTABLE="$ASL_WORKDIR/python/bin/python"
 cmake --build "$ASL_WORKDIR/build" --parallel 4
 ctest --test-dir "$ASL_WORKDIR/build" --output-on-failure
 cmake --install "$ASL_WORKDIR/build" --prefix "$ASL_WORKDIR/install"
 "$ASL_WORKDIR/install/bin/asl-replay" --help
-"$ASL_WORKDIR/python/bin/python" native/tools/example.py "$ASL_WORKDIR/install/bin/asl-replay" "$ASL_WORKDIR/example"
-python3 native/tools/compare.py "$ASL_WORKDIR/example/baseline.jsonl" "$ASL_WORKDIR/example/candidate.jsonl" --atol 0 --rtol 0
-python3 native/tools/compare.py "$ASL_WORKDIR/example/baseline.jsonl" "$ASL_WORKDIR/example/fault/results.jsonl" --atol 0 --rtol 0
+"$ASL_WORKDIR/install/bin/asl-example" "$ASL_WORKDIR/example"
+python3 "$ASL_WORKDIR/install/share/asl-replay/tools/compare.py" "$ASL_WORKDIR/example/baseline.jsonl" "$ASL_WORKDIR/example/candidate.jsonl" --atol 0 --rtol 0
+python3 "$ASL_WORKDIR/install/share/asl-replay/tools/compare.py" "$ASL_WORKDIR/example/baseline.jsonl" "$ASL_WORKDIR/example/fault/results.jsonl" --atol 0 --rtol 0
 ```
 
 The final comparison deliberately exits **1** and identifies `f0`: the first
@@ -41,6 +43,13 @@ numerical output was increased by 0.25. Both real replay runs should compare
 exactly with exit **0**. The fault changes a result record, not a trained model.
 `fault/fault.json` records the base hash, configuration and generated file hashes.
 The example refuses an existing output directory. Preserve it for review.
+
+The installed `asl-example` command itself exits **0** only when both checks work:
+the repeat matches exactly and the deliberately changed output is detected. It
+prints the changed frame and the saved report path. It exits **2** on setup or
+execution failure, including an existing output directory. Its installed model is
+a channel-mean arithmetic fixture, not a perception model. It uses no network,
+private recording, external dataset or training job.
 
 Named run options can appear in any order. Duplicate, unknown and missing
 options produce explicit errors. Native input/runtime failure exits 1; unknown
