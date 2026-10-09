@@ -103,3 +103,28 @@ Real KITTI acquisition requires registered authorized access; raw data stays
 local. Viewer and spatial adapters must validate synchronization independently.
 MCAP remains an optional later adapter. No native release/tag is published merely
 because this path works; CI, reproducible example and release audit are required.
+
+## Execute a preprocessing comparison
+
+Run both supported preprocessing contracts on the same recording and model:
+
+```sh
+python3 native/tools/compare_configurations.py \
+  ./native/build/asl-replay MANIFEST.tsv MODEL.onnx ./comparison \
+  --model-sha SHA256
+```
+
+The default baseline is `asl-imagenet-center-v1`; the candidate is
+`asl-rgb-bilinear-v1`. Both invoke the native inference executable. The tool never
+edits saved prediction records to simulate an execution. The output directory
+must be new. It retains the declared plan, both JSONL records, stdout/stderr,
+whole-command wall times and the per-frame comparison. Failed or timed-out runs
+retain completed work and failure metadata; each invocation defaults to a
+300-second cap, configurable with `--timeout`. CPU and peak RSS are not measured
+by this wrapper. Numerical tolerances are fixed at atol=rtol=1e-6.
+
+A configuration identity difference is reported even if numerical outputs happen
+to match. No accuracy conclusion follows without task labels. The October 7
+real-sequence study already executed both contracts on 108 frames; this command
+packages that workflow for reuse rather than introducing a new scientific result.
+Keep real recordings and their derived payloads local under the dataset terms.
