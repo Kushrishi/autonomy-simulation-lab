@@ -44,6 +44,11 @@ ctest --test-dir native/build --output-on-failure
 ```
 
 On Linux, development CI also enables AddressSanitizer and UndefinedBehaviorSanitizer.
+Native CI enables the pinned ONNX Runtime CPU path on Linux x86_64 and macOS
+arm64, including synthetic inference, preprocessing-reference and CLI workflow
+checks. Each platform compares repeat runs locally; this does not establish
+cross-platform numerical equivalence or human desktop usability. No protected
+recording enters CI.
 
 Validate manifest structure:
 

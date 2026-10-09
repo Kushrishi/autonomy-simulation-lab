@@ -26,13 +26,17 @@ jobs:
           - os: ubuntu-latest
             sanitizers: "ON"
             ort: "ON"
-          - os: macos-latest
+          - os: macos-15
             sanitizers: "OFF"
-            ort: "OFF"
+            ort: "ON"
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v7.0.0
+        with:
+          python-version: "3.12"
 
       - name: Install libpng (Linux)
         if: runner.os == 'Linux'
@@ -43,7 +47,6 @@ jobs:
         run: brew install libpng
 
       - name: Install pinned model-reference test dependency
-        if: runner.os == 'Linux'
         run: python3 -m pip install Pillow==12.3.0
 
       - name: Install pinned ONNX Runtime CPU (Linux)
@@ -53,6 +56,15 @@ jobs:
           echo 'a5ed5a3cac51fbb2e90da632ae43d19212faaa20e76484e62bcb7c23ddb3b3fd  ort.tgz' | sha256sum --check
           tar -xzf ort.tgz
           echo "ORT_ROOT=$PWD/onnxruntime-linux-x64-1.30.0" >> "$GITHUB_ENV"
+
+      - name: Install pinned ONNX Runtime CPU (macOS arm64)
+        if: runner.os == 'macOS'
+        run: |
+          test "$(uname -m)" = arm64
+          curl --fail --location --retry 3 -o ort.tgz https://github.com/microsoft/onnxruntime/releases/download/v1.30.0/onnxruntime-osx-arm64-1.30.0.tgz
+          echo '6ebb5062a934537c352937821f9fe9718e7de1a2db1122a93dd363ffd53a7012  ort.tgz' | shasum --algorithm 256 --check
+          tar -xzf ort.tgz
+          echo "ORT_ROOT=$PWD/onnxruntime-osx-arm64-1.30.0" >> "$GITHUB_ENV"
 
       - name: Configure
         run: >
