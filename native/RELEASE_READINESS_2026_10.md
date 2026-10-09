@@ -1,4 +1,22 @@
-# Native release-candidate audit — 2026-10-06
+# Native release readiness
+
+Current acceptance status — 9 October 2026. The browser v1.0.0 release is separate.
+No native release has been published.
+
+| Requirement | Current evidence |
+| --- | --- |
+| Real recording and executed faults | All 108 authorized KITTI frames replayed; actual RGB/BGR and preprocessing-contract faults executed. See [real-sequence validation](REAL_SEQUENCE_VALIDATION_2026_10.md). |
+| Linux/macOS inference installation | CPU inference and relocated installation passed native CI; ONNX Runtime bundling is implemented. |
+| Repeatable comparison | Installed tools execute two preprocessing configurations and retain output, failures and comparison. |
+| Rendered visualization | Representative frames inspected and all timeline positions checked through the SDK. See [graphical inspection](GRAPHICAL_QA_2026_10_09.md). |
+| Human usability | Pending ordinary desktop navigation and independent first use. |
+| Complete release workflow | Finish the installed recording-to-comparison-to-inspection walkthrough; validate supported installation and first use before native release. |
+
+Older entries below are dated evidence, not the current blocker list. Same-host
+repeatability does not establish cross-host equivalence or perception accuracy.
+
+## Historical audit — 6 October 2026
+
 
 Status: end-to-end engineering boundary implemented and CI-green. **No public
 native version tag/release has been created. Publication requires user approval.**
