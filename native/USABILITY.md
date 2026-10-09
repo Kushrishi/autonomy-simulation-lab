@@ -105,6 +105,13 @@ system certification. The complete [108-frame real sequence](REAL_SEQUENCE_VALID
 passed import/replay/export/reopen. Human interactive viewer QA remains required
 before the current native release gate is met. See the [fresh-source audit](CLEANROOM_REPRODUCTION_2026_10.md). No tag/release is created.
 
+## Installed recording-to-viewer workflow
+
+The [installed walkthrough](INSTALLED_RECORDING_WORKFLOW.md) connects local recording
+import, two actual preprocessing executions, input-bound comparison and optional
+Rerun inspection. All adapter tools are included in the installation; no source
+checkout is needed. Rerun remains optional and is installed separately.
+
 ## Desktop acceptance of the retained recording
 
 Use the existing authorized 108-frame RRD and its inspection blueprint with
