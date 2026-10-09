@@ -50,6 +50,30 @@ checks. Each platform compares repeat runs locally; this does not establish
 cross-platform numerical equivalence or human desktop usability. No protected
 recording enters CI.
 
+## Install with ONNX Runtime included
+
+For an inference-enabled installation that can move without keeping the original
+ONNX Runtime extraction folder, configure the reviewed runtime distribution with:
+
+```bash
+cmake -S native -B native/build -DCMAKE_BUILD_TYPE=Release \
+  -DASL_ONNXRUNTIME_ROOT=/absolute/path/to/onnxruntime-distribution \
+  -DASL_BUNDLE_ONNXRUNTIME=ON
+cmake --build native/build
+cmake --install native/build --prefix /absolute/path/to/asl-install
+```
+
+Move the entire installation, including `bin`, `lib` and `share`. ONNX Runtime
+libraries, version metadata and license notices are included. The executable uses
+a relative runtime-library path. Linux and macOS CI test a moved installation with
+the original runtime directory unavailable, using synthetic inference fixtures.
+
+This bundles ONNX Runtime, not all operating-system dependencies: libpng, zlib and
+a compatible C++/OS runtime must still be installed. It is not a universal binary,
+a signed macOS application, or a desktop usability result. Viewer installation and
+recordings remain separate; see [USABILITY.md](USABILITY.md). The default build
+continues to use the explicitly configured external ONNX Runtime directory.
+
 Validate manifest structure:
 
 ```bash

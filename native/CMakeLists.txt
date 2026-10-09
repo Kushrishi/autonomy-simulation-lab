@@ -4,6 +4,10 @@ project(asl_replay LANGUAGES CXX)
 
 option(ASL_ENABLE_SANITIZERS "Enable AddressSanitizer and UndefinedBehaviorSanitizer" OFF)
 set(ASL_ONNXRUNTIME_ROOT "" CACHE PATH "Pinned ONNX Runtime distribution; empty disables inference")
+option(ASL_BUNDLE_ONNXRUNTIME "Install ONNX Runtime beside the replay executable" OFF)
+if(ASL_BUNDLE_ONNXRUNTIME AND NOT ASL_ONNXRUNTIME_ROOT)
+    message(FATAL_ERROR "Bundling requires ASL_ONNXRUNTIME_ROOT")
+endif()
 
 find_package(PNG REQUIRED)
 
@@ -40,8 +44,26 @@ if(ASL_ONNXRUNTIME_ROOT)
     target_include_directories(asl-replay SYSTEM PRIVATE "${ORT_INCLUDE}")
     target_link_libraries(asl-replay PRIVATE "${ORT_LIBRARY}")
     target_compile_definitions(asl-replay PRIVATE ASL_HAS_ORT=1)
-    # Installed runner keeps the explicitly configured external runtime location.
-    set_target_properties(asl-replay PROPERTIES INSTALL_RPATH "${ASL_ONNXRUNTIME_ROOT}/lib")
+    if(ASL_BUNDLE_ONNXRUNTIME)
+        if(APPLE)
+            set(ASL_ORT_INSTALL_RPATH "@loader_path/../lib")
+        elseif(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+            set(ASL_ORT_INSTALL_RPATH "$ORIGIN/../lib")
+        else()
+            message(FATAL_ERROR "Bundled ONNX Runtime is supported on Linux and macOS only")
+        endif()
+        set_target_properties(asl-replay PROPERTIES
+            INSTALL_RPATH "${ASL_ORT_INSTALL_RPATH}" INSTALL_RPATH_USE_LINK_PATH FALSE)
+        # Retain versioned libraries, SONAME links and the shared provider helper.
+        install(DIRECTORY "${ASL_ONNXRUNTIME_ROOT}/lib/" DESTINATION lib
+            FILES_MATCHING PATTERN "libonnxruntime*.so*" PATTERN "libonnxruntime*.dylib")
+        install(FILES "${ASL_ONNXRUNTIME_ROOT}/LICENSE"
+            "${ASL_ONNXRUNTIME_ROOT}/ThirdPartyNotices.txt"
+            "${ASL_ONNXRUNTIME_ROOT}/VERSION_NUMBER"
+            DESTINATION share/asl-replay/onnxruntime)
+    else()
+        set_target_properties(asl-replay PROPERTIES INSTALL_RPATH "${ASL_ONNXRUNTIME_ROOT}/lib")
+    endif()
 endif()
 
 enable_testing()

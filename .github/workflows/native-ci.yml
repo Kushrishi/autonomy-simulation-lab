@@ -72,6 +72,7 @@ jobs:
           -DCMAKE_BUILD_TYPE=Debug
           -DASL_ENABLE_SANITIZERS=${{ matrix.sanitizers }}
           -DASL_ONNXRUNTIME_ROOT=${{ env.ORT_ROOT }}
+          -DASL_BUNDLE_ONNXRUNTIME=ON
 
       - name: Build
         run: cmake --build native/build --parallel
@@ -81,3 +82,6 @@ jobs:
 
       - name: Validate example manifest
         run: ./native/build/asl-replay validate-manifest native/examples/manifest.tsv
+
+      - name: Verify relocated install without original ONNX Runtime
+        run: python3 native/tests/test_installed_bundle.py native/build "$ORT_ROOT"
