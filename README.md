@@ -9,11 +9,11 @@ Two layers answer different parts of that question:
 | Layer | Current capability | Status |
 | --- | --- | --- |
 | Browser v1 | Interactive planning, noisy localization, state estimation and telemetry export | Stable [v1.0.0](https://github.com/Kushrishi/autonomy-simulation-lab/releases/tag/v1.0.0) |
-| Native C++ | Manifest/timestamp and consumed-byte identity, bounded PNG, preprocessing, CPU inference and structured output comparison | Synthetic end-to-end verified; real sensor-sequence and viewer validation pending |
+| Native C++ | Manifest/timestamp and consumed-byte identity, bounded PNG, preprocessing, CPU inference and structured output comparison | Complete 108-frame KITTI replay verified on one Linux host; interactive desktop usability pending |
 
 [Live simulator](https://kushrishi.github.io/autonomy-simulation-lab/) · [System overview](https://kushrishi.com/projects/autonomy-simulation-lab) · [Native contracts and tests](native/README.md) · [MIT license](LICENSE)
 
-The browser is a simplified experimental environment, not a real autonomous vehicle stack. The native layer makes input identity, model execution, failure handling and reproducibility explicit. Real sensor-sequence validation remains pending.
+The browser is a simplified experimental environment, not a real autonomous vehicle stack. The native layer makes input identity, model execution, failure handling and reproducibility explicit. A complete [108-frame real sequence](native/REAL_SEQUENCE_VALIDATION_2026_10.md) passed import, repeated CPU inference, fault checks and viewer export/reopen on the tested Linux host. [Representative rendered views](native/GRAPHICAL_QA_2026_10_09.md) were inspected; ordinary interactive desktop usability remains pending. This is systems evidence, not perception accuracy, sensor fusion or cross-machine determinism. No native release is published.
 
 ## Preview
 
