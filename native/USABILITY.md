@@ -14,8 +14,10 @@ require Pillow 12.3.0 and the pinned ONNX Runtime distribution below.
 After cloning the repository, run from its root. Downloads are external to Git;
 the installed executable retains the explicitly configured ORT library path.
 Moving/removing that runtime directory invalidates the installation. This is not
-a portable binary bundle. macOS currently has foundation/preprocessing CI;
-this pinned x64 Linux inference archive is not a macOS dependency.
+a portable binary bundle. Native CI exercises pinned CPU inference on Linux
+x86_64 and macOS arm64 with synthetic inputs. Each platform checks its own
+repeat runs; this does not establish cross-platform numerical equivalence or
+human desktop usability. The x64 Linux archive below is not a macOS dependency.
 
 ```bash
 ASL_WORKDIR="$(mktemp -d)"
