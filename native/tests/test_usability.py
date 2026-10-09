@@ -8,6 +8,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "tools"))
 import benchmark
 import example
+import compare_configurations
 
 
 def main(binary):
@@ -47,6 +48,52 @@ def main(binary):
             r["exact_repeat_passed"]
             and r["runs"][0]["latency"]["verify"]["p50_ms"] >= 0
         )
+        actual = compare_configurations.run(
+            binary,
+            native / "examples/synthetic/manifest.tsv",
+            native / "tests/fixtures/channel_means.onnx",
+            example.MODEL_SHA,
+            Path(t) / "executed",
+            "asl-imagenet-center-v1",
+            "asl-rgb-bilinear-v1",
+        )
+        assert len(actual["executions"]) == 2
+        assert actual["comparison"]["changed_frames"] == ["f0"]
+        assert (
+            "preprocessing" in actual["comparison"]["frames"][0]["identity_differences"]
+        )
+        assert (Path(t) / "executed/baseline.jsonl").is_file()
+        assert (Path(t) / "executed/candidate.jsonl").is_file()
+        try:
+            compare_configurations.run(
+                binary,
+                native / "examples/synthetic/manifest.tsv",
+                native / "tests/fixtures/channel_means.onnx",
+                example.MODEL_SHA,
+                Path(t) / "executed",
+                "asl-imagenet-center-v1",
+                "asl-rgb-bilinear-v1",
+            )
+        except FileExistsError:
+            pass
+        else:
+            raise AssertionError("existing comparison replaced")
+        try:
+            compare_configurations.run(
+                binary,
+                native / "examples/synthetic/manifest.tsv",
+                native / "tests/fixtures/channel_means.onnx",
+                "0" * 64,
+                Path(t) / "failed-execution",
+                "asl-imagenet-center-v1",
+                "asl-rgb-bilinear-v1",
+            )
+        except ValueError:
+            pass
+        else:
+            raise AssertionError("wrong model hash accepted")
+        assert (Path(t) / "failed-execution/failed.json").is_file()
+        assert not (Path(t) / "failed-execution/candidate.jsonl").exists()
         malformed = Path(t) / "bad.jsonl"
         malformed.write_text("[]\n")
         r = subprocess.run(
