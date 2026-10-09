@@ -58,7 +58,7 @@ def main(binary):
             "asl-rgb-bilinear-v1",
         )
         assert len(actual["executions"]) == 2
-        assert actual["comparison"]["changed_frames"] == ["f0"]
+        assert actual["comparison"]["changed_frames"] == ["f0", "f1"]
         assert (
             "preprocessing" in actual["comparison"]["frames"][0]["identity_differences"]
         )
