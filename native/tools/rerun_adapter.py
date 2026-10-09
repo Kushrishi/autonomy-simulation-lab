@@ -9,7 +9,7 @@ import math
 from itertools import pairwise
 from pathlib import Path
 
-from compare import load
+from compare import load, result_digest
 from kitti_adapter import snapshot
 
 
@@ -58,11 +58,32 @@ def prepare(manifest, results, spatial=None, comparison=None):
             if row["oxts_timestamp_ns"] - row["timestamp_ns"] != row["skew_ns"]:
                 raise ValueError("viewer spatial skew disagrees with timestamps")
             poses[row["frame_id"]] = row
-    changes = (
-        set()
-        if comparison is None
-        else set(json.loads(snapshot(comparison, 16_000_000))["changed_frames"])
-    )
+    changes = set()
+    if comparison is not None:
+        report = json.loads(snapshot(comparison, 16_000_000))
+        if not isinstance(report, dict):
+            raise ValueError("viewer comparison must be an object")
+        identities = report.get("result_identities")
+        if (
+            not isinstance(identities, dict)
+            or set(identities) != {"baseline", "candidate"}
+            or any(
+                not isinstance(value, str)
+                or len(value) != 64
+                or any(c not in "0123456789abcdef" for c in value)
+                for value in identities.values()
+            )
+            or result_digest(records) not in identities.values()
+        ):
+            raise ValueError("viewer comparison is not bound to the loaded results")
+        changed = report.get("changed_frames")
+        if (
+            not isinstance(changed, list)
+            or any(not isinstance(frame, str) for frame in changed)
+            or len(changed) != len(set(changed))
+        ):
+            raise ValueError("viewer changed frames must be unique string IDs")
+        changes = set(changed)
     if not changes <= set(ids):
         raise ValueError("viewer comparison references unknown frames")
     images = []
