@@ -10,7 +10,7 @@ has been published. [Roadmap](../ROADMAP.md) defines the execution order.
 | Real recorded execution | All 108 frames replayed; actual RGB/BGR and preprocessing changes exercised. | No perception-accuracy claim follows; do not repeat the recording solely to restate completion. |
 | Installed comparison | Two executions on exact recovered frames completed; new baseline outputs matched retained baseline. | Original candidate partial/lock residue remains unexplained. The post-exit guard detects residue; native successful execution now also checks lock release. Neither establishes the historical cause. |
 | Visualization data | Candidate RRD and layout verified; six decoded channels each have 108 rows. Earlier representative rendered views inspected. | Ordinary desktop navigation, readability and close/reopen acceptance. |
-| Reproducible deliverable | Compact comparison records retained; original recording bundle recovered with matching hashes. | Complete new viewer packet recovered from three retained parts; all part hashes, the original 95,071,053-byte archive hash and ZIP CRCs passed fresh readback. |
+| Reproducible deliverable | Compact records and original recording recovered. Complete 95,071,053-byte viewer packet recovered from three parts; part/archive hashes and ZIP CRCs passed fresh readback. | Transfer the retained packet to the inspection machine, verify its identity and complete desktop acceptance. |
 | Native release | Source and third-party notices are included in the installed layout. | Resolve the open items above, document limitations and obtain release approval before tagging. |
 
 ## Acceptance procedure

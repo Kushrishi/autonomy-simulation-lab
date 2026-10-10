@@ -14,7 +14,7 @@ explores planning and localization with synthetic measurements.
 
 | Workflow | What you can do | Current status |
 | --- | --- | --- |
-| Native C++/Python replay | Verify frame/model identity, execute CPU inference, compare outputs and inspect an optional Rerun recording. | Installed 108-frame comparison completed; output-cleanup diagnosis, complete packet recovery and human desktop acceptance remain open. No native release is published. |
+| Native C++/Python replay | Verify frame/model identity, execute CPU inference, compare outputs and inspect an optional Rerun recording. | Installed 108-frame comparison and complete viewer-packet recovery passed. Historical output residue remains unexplained; human desktop acceptance and independent first use remain open. No native release is published. |
 | Browser simulator | Compare grid planners, add obstacles, inspect noisy localization and export telemetry. | Released as [v1.0.0](https://github.com/Kushrishi/autonomy-simulation-lab/releases/tag/v1.0.0). |
 
 ## Native replay
