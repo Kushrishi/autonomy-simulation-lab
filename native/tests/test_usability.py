@@ -1,6 +1,8 @@
 """Installed/build CLI example and benchmark, including user-facing failures."""
 
 import json
+import platform
+import resource
 import subprocess
 import sys
 import tempfile
@@ -56,17 +58,53 @@ def main(binary):
                     text=True,
                 )
                 assert r.returncode != 0 and "positive integer" in r.stderr
+        subprocess.run(
+            [sys.executable, "-c", "block = bytearray(128 * 1024 * 1024)"], check=True
+        )
+        contaminated_rss = resource.getrusage(resource.RUSAGE_CHILDREN).ru_maxrss * (
+            1 if platform.system() == "Darwin" else 1024
+        )
         r = benchmark.benchmark(
             binary,
             native / "examples/synthetic/manifest.tsv",
             native / "tests/fixtures/channel_means.onnx",
             example.MODEL_SHA,
             2,
+            output=Path(t) / "benchmark",
         )
         assert (
             r["exact_repeat_passed"]
             and r["runs"][0]["latency"]["verify"]["p50_ms"] >= 0
         )
+        assert r["peak_child_rss_bytes"] < contaminated_rss
+        assert r["peak_child_rss_bytes"] == max(
+            run["peak_child_rss_bytes"] for run in r["runs"]
+        )
+        assert all(
+            run["child_cpu_seconds"] >= 0 and run["peak_child_rss_bytes"] > 0
+            for run in r["runs"]
+        )
+        assert json.loads((Path(t) / "benchmark/report.json").read_text()) == r
+        assert (Path(t) / "benchmark/run-0.jsonl").is_file()
+        assert (Path(t) / "benchmark/run-0.resources.json").is_file()
+        try:
+            benchmark.benchmark(
+                binary,
+                native / "examples/synthetic/manifest.tsv",
+                native / "tests/fixtures/channel_means.onnx",
+                "0" * 64,
+                2,
+                output=Path(t) / "failed-benchmark",
+            )
+        except ValueError:
+            pass
+        else:
+            raise AssertionError("wrong model identity accepted by benchmark")
+        failed = Path(t) / "failed-benchmark"
+        assert (failed / "failed.json").is_file()
+        assert (failed / "run-0.resources.json").is_file()
+        assert not (failed / "run-1.stdout.txt").exists()
+        assert not (failed / "report.json").exists()
         actual = compare_configurations.run(
             binary,
             native / "examples/synthetic/manifest.tsv",
@@ -124,13 +162,17 @@ def main(binary):
                     assert "output cleanup incomplete" in str(error)
                 else:
                     raise AssertionError("successful exit concealed output residue")
-            expected_calls = ["baseline"] if release == "baseline" else ["baseline", "candidate"]
+            expected_calls = (
+                ["baseline"] if release == "baseline" else ["baseline", "candidate"]
+            )
             assert calls == expected_calls
             assert (destination / (release + ".jsonl" + suffix)).exists()
             assert (destination / (release + ".jsonl")).is_file()
             failed = json.loads((destination / "failed.json").read_text())
             assert failed["completed"][-1]["returncode"] == 0
-            assert failed["completed"][-1]["output_residue"] == [release + ".jsonl" + suffix]
+            assert failed["completed"][-1]["output_residue"] == [
+                release + ".jsonl" + suffix
+            ]
             assert not (destination / "report.json").exists()
             assert not (destination / "comparison.json").exists()
         try:

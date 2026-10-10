@@ -98,12 +98,17 @@ Existing independent tensor parity tests catch channel/layout/normalization bugs
 ## Repeated performance and deterministic output
 
 ```bash
-python3 native/tools/benchmark.py "$ASL_WORKDIR/install/bin/asl-replay" native/examples/synthetic/manifest.tsv native/tests/fixtures/channel_means.onnx --model-sha 436aa6e3a86b7d5d82af06c55060eb0ca3d8ca07cc60879d05fcd39e446130a0 --repeats 3
+python3 native/tools/benchmark.py "$ASL_WORKDIR/install/bin/asl-replay" native/examples/synthetic/manifest.tsv native/tests/fixtures/channel_means.onnx --model-sha 436aa6e3a86b7d5d82af06c55060eb0ca3d8ca07cc60879d05fcd39e446130a0 --repeats 3 --output "$ASL_WORKDIR/benchmark"
 ```
 
 The bounded harness reports host, executable/model/recording identity, per-run
 p50/p95 verification, decode, preprocessing, inference and total latency,
-whole-command throughput, child high-water RSS and exact-repeat comparisons.
+whole-command throughput, per-native-child CPU/peak RSS and exact-repeat comparisons.
+The fresh output directory retains each JSONL, stdout/stderr and `wait4` resource
+receipt, plus `report.json`. Previous children cannot inflate the per-run RSS.
+Failed runs retain evidence and `failed.json`; no automatic retry occurs.
+Measurements include native startup and use Linux/macOS `wait4`. Historical v1
+RSS used the harness-wide child high-water; do not retroactively reinterpret it.
 Per-frame total excludes startup and serialization; command wall time includes
 those costs. Verification is the per-frame read/hash, not initial all-file
 verification. Serialization is not separately instrumented. Latency never enters
