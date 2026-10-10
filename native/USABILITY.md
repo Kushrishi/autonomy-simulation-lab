@@ -47,7 +47,8 @@ The example refuses an existing output directory. Preserve it for review.
 The installed `asl-example` command exits **0** only after the exact
 repeat matches, the deliberately edited result is detected, **and two actual
 CPU inference runs with different preprocessing contracts produce an aligned,
-numerically changed comparison**. This reuses the existing
+identity-aware comparison**. It reports numerical changes when they occur, rather
+than assuming that different configurations must change predictions. This reuses the existing
 `compare_configurations.py` workflow rather than a second demonstration
 pipeline. Its output identifies the changed frames and paths to two saved
 reports. You can reopen the evidence without running inference again:
