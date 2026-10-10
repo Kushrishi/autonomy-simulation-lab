@@ -59,8 +59,9 @@ RgbImage resize_crop(const RgbImage& source, std::uint32_t width, std::uint32_t 
                 std::int64_t sum = 1 << 21;
                 const auto& k = vertical[y + top];
                 for (std::size_t i = 0; i < k.coefficients.size(); ++i)
-                    sum += std::int64_t(intermediate.pixels[((k.start + i) * crop_size + x) * 3 + c]) *
-                           k.coefficients[i];
+                    sum +=
+                        std::int64_t(intermediate.pixels[((k.start + i) * crop_size + x) * 3 + c]) *
+                        k.coefficients[i];
                 result.pixels[(std::size_t(y) * crop_size + x) * 3 + c] =
                     std::uint8_t(std::clamp<std::int64_t>(sum >> 22, 0, 255));
             }
