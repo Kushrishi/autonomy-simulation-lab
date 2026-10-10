@@ -70,11 +70,21 @@ def run(binary, manifest, model, model_sha, output, baseline, candidate, timeout
                 "release": active,
                 "wall_seconds": time.perf_counter() - start,
                 "returncode": process.returncode,
+                "output_residue": [
+                    active + ".jsonl" + suffix
+                    for suffix in (".partial", ".lock")
+                    if (output / (active + ".jsonl" + suffix)).exists()
+                    or (output / (active + ".jsonl" + suffix)).is_symlink()
+                ],
             }
             write(output / (active + ".execution.json"), execution)
             executions.append(execution)
             if process.returncode:
                 raise ValueError(f"{active} execution failed; see retained stderr")
+            if execution["output_residue"]:
+                raise ValueError(
+                    f"{active} output cleanup incomplete; preserved partial/lock evidence"
+                )
         comparison = compare(
             load(output / "baseline.jsonl"),
             load(output / "candidate.jsonl"),
