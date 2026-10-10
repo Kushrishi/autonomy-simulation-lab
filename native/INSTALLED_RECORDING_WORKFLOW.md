@@ -5,6 +5,12 @@ preprocessing configurations on the same recording, preserves both results and
 opens the candidate's changed frames in an optional local viewer. A change is not
 necessarily an accuracy regression: no ground-truth class labels are used.
 
+The comparison checks for leftover `.partial` files and `.lock` directories
+after each process exits. Even with exit code zero, residue stops the workflow
+before a success report is published. Execution records retain the exit code
+and residue names; existing files are preserved for diagnosis. This is an
+immediate post-exit check, not a guarantee against later filesystem changes.
+
 ## Inputs and installation
 
 Follow `USABILITY.md` to build and install with bundled ONNX Runtime. Set an

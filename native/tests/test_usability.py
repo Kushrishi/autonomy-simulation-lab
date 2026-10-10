@@ -1,9 +1,11 @@
 """Installed/build CLI example and benchmark, including user-facing failures."""
 
+import json
 import subprocess
 import sys
 import tempfile
 from pathlib import Path
+from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "tools"))
 import benchmark
@@ -64,6 +66,56 @@ def main(binary):
         )
         assert (Path(t) / "executed/baseline.jsonl").is_file()
         assert (Path(t) / "executed/candidate.jsonl").is_file()
+        assert all(not run["output_residue"] for run in actual["executions"])
+        # Valid final output and zero exit must not hide incomplete publication.
+        # Inject residue without extra model executions or changing prior records.
+        for release, suffix in (
+            ("baseline", ".partial"),
+            ("baseline", ".lock"),
+            ("candidate", ".partial"),
+            ("candidate", ".lock"),
+        ):
+            destination = Path(t) / (release + suffix)
+            calls = []
+
+            def completed_with_residue(command, **kwargs):
+                output = Path(command[command.index("--out") + 1])
+                calls.append(output.stem)
+                output.write_bytes((Path(t) / "executed" / output.name).read_bytes())
+                if output.stem == release:
+                    residue = Path(str(output) + suffix)
+                    if suffix == ".partial":
+                        residue.write_bytes(b"preserve diagnostic bytes")
+                    else:
+                        residue.mkdir()
+                return subprocess.CompletedProcess(command, 0)
+
+            with patch.object(
+                compare_configurations.subprocess, "run", completed_with_residue
+            ):
+                try:
+                    compare_configurations.run(
+                        binary,
+                        native / "examples/synthetic/manifest.tsv",
+                        native / "tests/fixtures/channel_means.onnx",
+                        example.MODEL_SHA,
+                        destination,
+                        "asl-imagenet-center-v1",
+                        "asl-rgb-bilinear-v1",
+                    )
+                except ValueError as error:
+                    assert "output cleanup incomplete" in str(error)
+                else:
+                    raise AssertionError("successful exit concealed output residue")
+            expected_calls = ["baseline"] if release == "baseline" else ["baseline", "candidate"]
+            assert calls == expected_calls
+            assert (destination / (release + ".jsonl" + suffix)).exists()
+            assert (destination / (release + ".jsonl")).is_file()
+            failed = json.loads((destination / "failed.json").read_text())
+            assert failed["completed"][-1]["returncode"] == 0
+            assert failed["completed"][-1]["output_residue"] == [release + ".jsonl" + suffix]
+            assert not (destination / "report.json").exists()
+            assert not (destination / "comparison.json").exists()
         try:
             compare_configurations.run(
                 binary,
