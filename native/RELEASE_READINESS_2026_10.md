@@ -34,6 +34,6 @@ model to make an earlier attempt appear clean.
   two measured runs, exact baseline comparison and preserved cleanup exception.
 
 These records describe their dated executions. Current acceptance is the table
-above; older blockers do not become current simply because they remain in an
-historical record. None of these checks establishes driving-model accuracy,
-clinical or safety suitability, or cross-platform numerical equivalence.
+above; older blockers do not become current simply because they remain in a
+historical record. These checks do not establish driving-model accuracy,
+suitability for vehicle deployment or cross-platform numerical equivalence.
