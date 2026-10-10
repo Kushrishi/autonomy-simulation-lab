@@ -128,3 +128,8 @@ to match. No accuracy conclusion follows without task labels. The October 7
 real-sequence study already executed both contracts on 108 frames; this command
 packages that workflow for reuse rather than introducing a new scientific result.
 Keep real recordings and their derived payloads local under the dataset terms.
+
+Successful execution checks partial-file removal and explicitly releases the writer
+lock. Cleanup errors return failure even when a complete final output exists;
+preserve that output and any residue for diagnosis. Exception unwinding attempts
+lock removal without masking the original execution error.

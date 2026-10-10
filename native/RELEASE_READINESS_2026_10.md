@@ -8,9 +8,9 @@ has been published. [Roadmap](../ROADMAP.md) defines the execution order.
 | Frame, model and preprocessing identity | Bounded consumed-byte validation, pinned runtime/model contracts and independent preprocessing reference checks. | Preserve the supported formats and explicit limits. |
 | Supported installation | Linux x86_64 and macOS arm64 CPU-inference CI; relocated install with original ONNX Runtime extraction unavailable. | Independent first use; system libpng/zlib and Python dependencies remain required. |
 | Real recorded execution | All 108 frames replayed; actual RGB/BGR and preprocessing changes exercised. | No perception-accuracy claim follows; do not repeat the recording solely to restate completion. |
-| Installed comparison | Two executions on exact recovered frames completed; new baseline outputs matched retained baseline. | Original candidate partial/lock residue remains unexplained. The new post-exit guard detects residue but does not establish its cause. |
-| Visualization data | Candidate RRD and layout verified; six decoded channels each have 108 rows. Earlier representative rendered views inspected. | Complete new viewer-packet recovery; ordinary desktop navigation, readability and close/reopen acceptance. |
-| Reproducible deliverable | Compact comparison records retained; original recording bundle recovered with matching hashes. | Full new viewer packet failed persistent upload. Its durable retention must not be claimed. |
+| Installed comparison | Two executions on exact recovered frames completed; new baseline outputs matched retained baseline. | Original candidate partial/lock residue remains unexplained. The post-exit guard detects residue; native successful execution now also checks lock release. Neither establishes the historical cause. |
+| Visualization data | Candidate RRD and layout verified; six decoded channels each have 108 rows. Earlier representative rendered views inspected. | Ordinary desktop navigation, readability and close/reopen acceptance. |
+| Reproducible deliverable | Compact comparison records retained; original recording bundle recovered with matching hashes. | Complete new viewer packet recovered from three retained parts; all part hashes, the original 95,071,053-byte archive hash and ZIP CRCs passed fresh readback. |
 | Native release | Source and third-party notices are included in the installed layout. | Resolve the open items above, document limitations and obtain release approval before tagging. |
 
 ## Acceptance procedure
