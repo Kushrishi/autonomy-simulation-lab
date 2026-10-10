@@ -68,10 +68,14 @@ libraries, version metadata and license notices are included. The executable use
 a relative runtime-library path. Linux and macOS CI test a moved installation with
 the original runtime directory unavailable, using synthetic inference fixtures.
 
-Run `asl-install/bin/asl-example /path/to/new-example-output` to exercise two
-repeat runs and identify a deliberately changed frame. The installation includes
-the synthetic recording, arithmetic test model and Python comparison tools, so
-this command works outside the checkout. Python 3 must be available on PATH.
+Run `asl-install/bin/asl-example /path/to/new-example-output` to check
+two exact-repeat runs, detect a deliberately changed result record and execute
+the two supported preprocessing configurations on the same included synthetic
+frames. The output preserves the configuration run logs, per-frame comparison
+and reports for inspection without rerunning inference. This extends the
+existing installed example; it does not claim better perception accuracy.
+The installation includes the recording, arithmetic test model and Python
+comparison tools, so it works outside the checkout. Python 3 must be on PATH.
 
 This bundles ONNX Runtime, not all operating-system dependencies: libpng, zlib and
 a compatible C++/OS runtime must still be installed. It is not a universal binary,
