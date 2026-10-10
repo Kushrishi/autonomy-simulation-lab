@@ -25,6 +25,10 @@ print(
         {
             "exact_repeat_passed": not report["exact_repeat"]["changed_frames"],
             "detected_fault_frames": report["injected_fault"]["changed_frames"],
+            "executed_configuration_changed_frames": report[
+                "executed_configuration_comparison"
+            ]["changed_frames"],
+            "configuration_report": str(args.output / "configurations/report.json"),
             "report": str(args.output / "report.json"),
             "scope": "synthetic recording; injected result change, not a model accuracy test",
         },
