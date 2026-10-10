@@ -106,3 +106,21 @@ The PNG adapter uses libpng rather than a vendored image decoder. Python 3
 The optional model-specific parity test requires Pillow 12.3.0. Real-sequence
 validation and visualization remain separate from this native core. No sensor
 fusion, model accuracy, or cross-platform bitwise inference claim is made.
+
+### Prospective graph optimization probe
+
+The optional `--graph-optimization basic` run setting uses ONNX Runtime basic
+graph rewrites; the default remains `disabled`. Every record identifies the
+selected level. Unknown levels fail before output publication.
+
+```bash
+python3 tools/optimization_probe.py /path/to/asl-replay /path/to/manifest.tsv /path/to/model.onnx /fresh/evidence --model-sha SHA256
+```
+
+This retains a protocol before six interleaved disabled/basic runs, per-child
+resources and full numerical comparisons. All other identities, top indices
+and the ordered frame set must match; fixed tolerances are 1e-6 absolute and
+relative, with exact repeats within each level. A useful speed observation
+requires all three paired walls to decrease and a median reduction of at least
+5%. This is a short same-host workload probe, not a confidence interval, accuracy
+evaluation or permission to promote a default. Preserve negative results.

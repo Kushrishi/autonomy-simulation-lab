@@ -106,7 +106,7 @@ add_test(NAME spatial_adapter_contract COMMAND ${Python3_EXECUTABLE}
 install(TARGETS asl-replay RUNTIME DESTINATION bin)
 install(PROGRAMS tools/asl-example DESTINATION bin)
 install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/../LICENSE" DESTINATION share/asl-replay)
-install(FILES tools/example.py tools/compare.py tools/faults.py tools/benchmark.py tools/compare_configurations.py
+install(FILES tools/example.py tools/compare.py tools/faults.py tools/benchmark.py tools/optimization_probe.py tools/compare_configurations.py
     tools/kitti_adapter.py tools/rerun_adapter.py
     DESTINATION share/asl-replay/tools)
 install(DIRECTORY examples/synthetic DESTINATION share/asl-replay/examples)
