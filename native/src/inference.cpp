@@ -1,4 +1,5 @@
 #include "asl/inference.hpp"
+#include "asl/output_lock.hpp"
 #include "asl/frame_files.hpp"
 #include "asl/png_decode.hpp"
 #include "asl/preprocess.hpp"
@@ -17,23 +18,6 @@
 namespace asl::replay {
 namespace {
 using Clock = std::chrono::steady_clock;
-class OutputLock {
-public:
-    explicit OutputLock(const std::filesystem::path& output) : path_(output) {
-        path_ += ".lock";
-        if (!std::filesystem::create_directory(path_))
-            throw std::runtime_error("output writer lock already exists");
-    }
-    ~OutputLock() {
-        std::error_code error;
-        std::filesystem::remove(path_, error);
-    }
-    OutputLock(const OutputLock&) = delete;
-    OutputLock& operator=(const OutputLock&) = delete;
-
-private:
-    std::filesystem::path path_;
-};
 double ms(Clock::time_point a, Clock::time_point b) {
     return std::chrono::duration<double, std::milli>(b - a).count();
 }
@@ -95,7 +79,7 @@ void run_inference(const std::filesystem::path& manifest, const std::filesystem:
     const char* outs[]{output_name.get()};
     const auto memory = Ort::MemoryInfo::CreateCpu(OrtArenaAllocator, OrtMemTypeDefault);
     // A partial file is intentionally preserved on failure, never published as complete.
-    const OutputLock writer_lock(output);
+    OutputLock writer_lock(output);
     if (std::filesystem::exists(output))
         throw std::runtime_error("output already exists");
     auto partial = output;
@@ -182,5 +166,8 @@ void run_inference(const std::filesystem::path& manifest, const std::filesystem:
     // Atomic no-clobber publication on the same filesystem.
     std::filesystem::create_hard_link(partial, output);
     std::filesystem::remove(partial);
+    if (std::filesystem::exists(partial))
+        throw std::runtime_error("partial output cleanup incomplete");
+    writer_lock.release();
 }
 }

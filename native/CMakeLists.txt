@@ -68,6 +68,10 @@ endif()
 
 enable_testing()
 
+add_executable(asl_output_lock_tests tests/test_output_lock.cpp)
+target_link_libraries(asl_output_lock_tests PRIVATE asl_replay_core)
+add_test(NAME output_lock_cleanup COMMAND asl_output_lock_tests "${CMAKE_CURRENT_BINARY_DIR}/output-lock-fixture")
+
 add_executable(asl_replay_manifest_tests tests/test_manifest.cpp)
 target_link_libraries(asl_replay_manifest_tests PRIVATE asl_replay_core)
 add_test(NAME manifest_contract COMMAND asl_replay_manifest_tests)
