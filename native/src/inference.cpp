@@ -39,7 +39,9 @@ std::string quote(const std::string& s) {
 
 void run_inference(const std::filesystem::path& manifest, const std::filesystem::path& model,
                    const std::string& expected_model_sha, const std::filesystem::path& output,
-                   const std::string& preprocessing) {
+                   const std::string& preprocessing, const std::string& graph_optimization) {
+    if (graph_optimization != "disabled" && graph_optimization != "basic")
+        throw std::runtime_error("unknown graph optimization level");
     if (preprocessing != "asl-rgb-bilinear-v1" && preprocessing != "asl-imagenet-center-v1")
         throw std::runtime_error("unknown preprocessing contract");
     if (std::filesystem::exists(output))
@@ -59,7 +61,9 @@ void run_inference(const std::filesystem::path& manifest, const std::filesystem:
     options.SetIntraOpNumThreads(1);
     options.SetInterOpNumThreads(1);
     options.SetExecutionMode(ExecutionMode::ORT_SEQUENTIAL);
-    options.SetGraphOptimizationLevel(GraphOptimizationLevel::ORT_DISABLE_ALL);
+    options.SetGraphOptimizationLevel(graph_optimization == "basic"
+                                          ? GraphOptimizationLevel::ORT_ENABLE_BASIC
+                                          : GraphOptimizationLevel::ORT_DISABLE_ALL);
     Ort::Session session(env, model_snapshot.bytes.data(), model_snapshot.bytes.size(), options);
     if (session.GetInputCount() != 1 || session.GetOutputCount() != 1)
         throw std::runtime_error("one input/output required by this workload boundary");
@@ -121,15 +125,15 @@ void run_inference(const std::filesystem::path& manifest, const std::filesystem:
         for (std::size_t i = 0; i < count; ++i)
             if (!std::isfinite(values[i]))
                 throw std::runtime_error("nonfinite model output");
-        stream
-            << "{\"schema\":\"asl-replay-v1\",\"frame_id\":" << quote(frame.record.frame_id)
-            << ",\"timestamp_ns\":" << frame.record.timestamp_ns
-            << ",\"input_sha256\":" << quote(frame.record.sha256)
-            << ",\"recording_sha256\":" << quote(recording_sha)
-            << ",\"model_sha256\":" << quote(model_sha)
-            << ",\"preprocessing\":" << quote(preprocessing)
-            << ",\"runtime\":" << quote(OrtGetApiBase()->GetVersionString())
-            << ",\"provider\":\"CPUExecutionProvider\",\"threads\":1,\"graph_optimization\":\"disabled\",\"dtype\":\"float32\",\"output_shape\":[";
+        stream << "{\"schema\":\"asl-replay-v1\",\"frame_id\":" << quote(frame.record.frame_id)
+               << ",\"timestamp_ns\":" << frame.record.timestamp_ns
+               << ",\"input_sha256\":" << quote(frame.record.sha256)
+               << ",\"recording_sha256\":" << quote(recording_sha)
+               << ",\"model_sha256\":" << quote(model_sha)
+               << ",\"preprocessing\":" << quote(preprocessing)
+               << ",\"runtime\":" << quote(OrtGetApiBase()->GetVersionString())
+               << ",\"provider\":\"CPUExecutionProvider\",\"threads\":1,\"graph_optimization\":"
+               << quote(graph_optimization) << ",\"dtype\":\"float32\",\"output_shape\":[";
         auto dims = info.GetShape();
         for (std::size_t i = 0; i < dims.size(); ++i) {
             if (i)

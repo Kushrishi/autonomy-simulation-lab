@@ -15,6 +15,8 @@ root = Path(__file__).resolve().parents[1]
 spec = importlib.util.spec_from_file_location("compare", root / "tools/compare.py")
 compare = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(compare)
+sys.path.insert(0, str(root / "tools"))
+import optimization_probe
 
 
 def png(path, width=3, height=2):
@@ -123,6 +125,62 @@ def main(binary):
             report = compare.compare(all_runs[0], rows, atol=0, rtol=0)
             assert not report["changed_frames"]
         base = all_runs[0]
+        basic_path = folder / "basic.jsonl"
+        basic = subprocess.run(
+            [
+                binary,
+                "run",
+                str(manifest),
+                "--model",
+                str(model),
+                "--model-sha",
+                digest,
+                "--graph-optimization",
+                "basic",
+                "--out",
+                str(basic_path),
+            ],
+            check=False,
+            capture_output=True,
+            text=True,
+        )
+        assert basic.returncode == 0, basic.stderr
+        basic_rows = compare.load(basic_path)
+        assert all(row["graph_optimization"] == "basic" for row in basic_rows)
+        assert optimization_probe.equivalent(base, basic_rows)["passed"]
+        changed_basic = copy.deepcopy(basic_rows)
+        changed_basic[0]["input_sha256"] = "0" * 64
+        assert not optimization_probe.equivalent(base, changed_basic)["passed"]
+        changed_basic = copy.deepcopy(basic_rows)
+        changed_basic[0]["output"][0] += 0.01
+        assert not optimization_probe.equivalent(base, changed_basic)["passed"]
+        assert compare.compare(base, basic_rows)["changed_frames"]  # identity differs
+        for row in basic_rows:
+            row["graph_optimization"] = "disabled"
+        assert not compare.compare(base, basic_rows)["changed_frames"]
+        invalid_path = folder / "invalid-graph.jsonl"
+        invalid = subprocess.run(
+            [
+                binary,
+                "run",
+                str(manifest),
+                "--model",
+                str(model),
+                "--model-sha",
+                digest,
+                "--graph-optimization",
+                "unknown",
+                "--out",
+                str(invalid_path),
+            ],
+            check=False,
+            capture_output=True,
+            text=True,
+        )
+        assert invalid.returncode != 0 and "graph optimization" in invalid.stderr
+        assert not invalid_path.exists()
+        assert not Path(str(invalid_path) + ".partial").exists()
+        assert not Path(str(invalid_path) + ".lock").exists()
         for mutation in (
             lambda r: r.pop("model_sha256"),
             lambda r: r.update(schema="wrong"),

@@ -36,7 +36,7 @@ void usage() {
               << "  asl-replay decode-png IMAGE.png [MAX_PIXELS]\n";
 #ifdef ASL_HAS_ORT
     std::cerr
-        << "  asl-replay run MANIFEST.tsv --model MODEL.onnx --model-sha SHA256 --out RESULTS.jsonl [--preprocessing CONTRACT]\n";
+        << "  asl-replay run MANIFEST.tsv --model MODEL.onnx --model-sha SHA256 --out RESULTS.jsonl [--preprocessing CONTRACT] [--graph-optimization disabled|basic]\n";
 #endif
 }
 
@@ -61,7 +61,7 @@ int main(int argc, char** argv) {
             for (int i = 3; i < argc; i += 2) {
                 const std::string key = argv[i];
                 if (key != "--model" && key != "--model-sha" && key != "--out" &&
-                    key != "--preprocessing")
+                    key != "--preprocessing" && key != "--graph-optimization")
                     throw std::invalid_argument("unknown run option: " + key);
                 if (i + 1 >= argc || std::string(argv[i + 1]).rfind("--", 0) == 0)
                     throw std::invalid_argument("missing value for " + key);
@@ -74,7 +74,9 @@ int main(int argc, char** argv) {
             asl::replay::run_inference(
                 argv[2], options.at("--model"), options.at("--model-sha"), options.at("--out"),
                 options.count("--preprocessing") ? options.at("--preprocessing")
-                                                 : "asl-rgb-bilinear-v1");
+                                                 : "asl-rgb-bilinear-v1",
+                options.count("--graph-optimization") ? options.at("--graph-optimization")
+                                                      : "disabled");
             return 0;
         }
 #endif
