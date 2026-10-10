@@ -21,12 +21,20 @@ def main(binary):
         assert report["injected_fault"]["changed_frames"] == ["f0"]
         executed = report["executed_configuration_comparison"]
         assert executed["changed_frames"] == ["f0", "f1"]
-        assert executed["numerically_changed_frames"] == ["f0", "f1"]
         summary_path = Path(t) / "example" / executed["report"]
         comparison_path = Path(t) / "example" / executed["comparison"]
         assert summary_path.is_file() and comparison_path.is_file()
         restored = json.loads(summary_path.read_text())
         assert restored["comparison"]["changed_frames"] == executed["changed_frames"]
+        assert all(
+            "preprocessing" in row["identity_differences"]
+            for row in restored["comparison"]["frames"]
+        )
+        assert executed["numerically_changed_frames"] == [
+            row["frame_id"]
+            for row in restored["comparison"]["frames"]
+            if row["numerical_changed"]
+        ]
         assert all(run["returncode"] == 0 for run in restored["executions"])
         try:
             example.example(binary, Path(t) / "example")
