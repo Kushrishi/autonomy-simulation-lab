@@ -59,9 +59,12 @@ def example(binary, output):
         or differences["extra"]
         or differences["reordered"]
         or not differences["changed_frames"]
-        or not any(row["numerical_changed"] for row in differences["frames"])
+        or not all(
+            "preprocessing" in row["identity_differences"]
+            for row in differences["frames"]
+        )
     ):
-        raise ValueError("example expected aligned, numerically changed configurations")
+        raise ValueError("example expected aligned, independently executed preprocessing identities")
     report = {
         "schema": "asl-example-v1",
         "synthetic_only": True,
