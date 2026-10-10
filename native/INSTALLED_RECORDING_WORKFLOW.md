@@ -11,6 +11,12 @@ before a success report is published. Execution records retain the exit code
 and residue names; existing files are preserved for diagnosis. This is an
 immediate post-exit check, not a guarantee against later filesystem changes.
 
+The execution plan pins the runner, manifest and model hashes. Checks before
+and after each child reject observed input drift; saved records must match those
+identities and differ only in the chosen preprocessing contract. Failure retains
+logs and records without publishing `report.json`. These boundary checks do not
+detect a transient change restored between checks or certify filesystem security.
+
 ## Inputs and installation
 
 Follow `USABILITY.md` to build and install with bundled ONNX Runtime. Set an

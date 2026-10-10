@@ -122,6 +122,76 @@ def main(binary):
         assert (Path(t) / "executed/baseline.jsonl").is_file()
         assert (Path(t) / "executed/candidate.jsonl").is_file()
         assert all(not run["output_residue"] for run in actual["executions"])
+        # A controlled comparison must not publish success when its inputs drift.
+        # Copy isolated inputs; no repository or retained recording is modified.
+        for changed_source in ("binary", "manifest", "model"):
+            for release in ("baseline", "candidate"):
+                isolated = Path(t) / (changed_source + "-during-" + release)
+                isolated.mkdir()
+                sources = {
+                    "binary": binary,
+                    "manifest": native / "examples/synthetic/manifest.tsv",
+                    "model": native / "tests/fixtures/channel_means.onnx",
+                }
+                copied = {}
+                for name, path in sources.items():
+                    copied[name] = isolated / name
+                    copied[name].write_bytes(Path(path).read_bytes())
+                calls = []
+
+                def completed_with_changed_source(command, **kwargs):
+                    output = Path(command[command.index("--out") + 1])
+                    calls.append(output.stem)
+                    output.write_bytes((Path(t) / "executed" / output.name).read_bytes())
+                    if output.stem == release:
+                        with copied[changed_source].open("ab") as stream:
+                            stream.write(b"changed input")
+                    return subprocess.CompletedProcess(command, 0)
+
+                destination = isolated / "evidence"
+                with patch.object(
+                    compare_configurations.subprocess, "run", completed_with_changed_source
+                ):
+                    try:
+                        compare_configurations.run(
+                            copied["binary"], copied["manifest"], copied["model"],
+                            example.MODEL_SHA, destination,
+                            "asl-imagenet-center-v1", "asl-rgb-bilinear-v1",
+                        )
+                    except ValueError as error:
+                        assert "execution inputs changed" in str(error)
+                    else:
+                        raise AssertionError("source drift published a controlled comparison")
+                assert calls == (["baseline"] if release == "baseline" else ["baseline", "candidate"])
+                assert (destination / (release + ".jsonl")).is_file()
+                assert (destination / (release + ".execution.json")).is_file()
+                assert (destination / "failed.json").is_file()
+                assert not (destination / "report.json").exists()
+        # A saved result must also match the pinned input identities, even when
+        # the caller files themselves remained unchanged.
+        destination = Path(t) / "wrong-saved-identity"
+
+        def completed_with_wrong_identity(command, **kwargs):
+            output = Path(command[command.index("--out") + 1])
+            rows = [json.loads(line) for line in (Path(t) / "executed" / output.name).read_text().splitlines()]
+            for row in rows:
+                row["recording_sha256"] = "0" * 64
+            output.write_text("".join(json.dumps(row) + "\n" for row in rows))
+            return subprocess.CompletedProcess(command, 0)
+
+        with patch.object(compare_configurations.subprocess, "run", completed_with_wrong_identity):
+            try:
+                compare_configurations.run(
+                    binary, native / "examples/synthetic/manifest.tsv",
+                    native / "tests/fixtures/channel_means.onnx", example.MODEL_SHA,
+                    destination, "asl-imagenet-center-v1", "asl-rgb-bilinear-v1",
+                )
+            except ValueError as error:
+                assert "saved records differ" in str(error)
+            else:
+                raise AssertionError("unbound saved records published success")
+        assert (destination / "failed.json").is_file()
+        assert not (destination / "report.json").exists()
         # Valid final output and zero exit must not hide incomplete publication.
         # Inject residue without extra model executions or changing prior records.
         for release, suffix in (
