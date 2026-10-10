@@ -44,12 +44,26 @@ exactly with exit **0**. The fault changes a result record, not a trained model.
 `fault/fault.json` records the base hash, configuration and generated file hashes.
 The example refuses an existing output directory. Preserve it for review.
 
-The installed `asl-example` command itself exits **0** only when both checks work:
-the repeat matches exactly and the deliberately changed output is detected. It
-prints the changed frame and the saved report path. It exits **2** on setup or
-execution failure, including an existing output directory. Its installed model is
-a channel-mean arithmetic fixture, not a perception model. It uses no network,
-private recording, external dataset or training job.
+The installed `asl-example` command exits **0** only after the exact
+repeat matches, the deliberately edited result is detected, **and two actual
+CPU inference runs with different preprocessing contracts produce an aligned,
+numerically changed comparison**. This reuses the existing
+`compare_configurations.py` workflow rather than a second demonstration
+pipeline. Its output identifies the changed frames and paths to two saved
+reports. You can reopen the evidence without running inference again:
+
+```bash
+python3 -m json.tool "$ASL_WORKDIR/example/report.json"
+python3 -m json.tool "$ASL_WORKDIR/example/configurations/report.json"
+```
+
+The configuration report retains the source identities, both execution
+records and the per-frame differences. The separate injected fault is a
+record-only mutation; the preprocessing comparison executes the model.
+The command exits **2** on setup or execution failure, including an existing
+output directory. The installed model is a channel-mean arithmetic fixture,
+not a perception model. These synthetic frames have no accuracy labels.
+No network, private recording, external dataset or training job is required.
 
 Named run options can appear in any order. Duplicate, unknown and missing
 options produce explicit errors. Native input/runtime failure exits 1; unknown
