@@ -30,25 +30,21 @@ bool is_within(const std::filesystem::path& base, const std::filesystem::path& c
     return true;
 }
 
-std::filesystem::path resolve_frame_path(
-    const std::filesystem::path& manifest_path,
-    const std::filesystem::path& relative_path
-) {
+std::filesystem::path resolve_frame_path(const std::filesystem::path& manifest_path,
+                                         const std::filesystem::path& relative_path) {
     if (relative_path.empty() || relative_path.is_absolute() || relative_path.has_root_name() ||
         relative_path.has_root_directory() || has_parent_reference(relative_path)) {
         throw std::runtime_error(
             "frame path must be a relative path contained by the manifest directory: " +
-            relative_path.string()
-        );
+            relative_path.string());
     }
 
     const auto base = std::filesystem::weakly_canonical(manifest_path.parent_path());
     const auto candidate = std::filesystem::weakly_canonical(base / relative_path);
 
     if (!is_within(base, candidate)) {
-        throw std::runtime_error(
-            "frame path resolves outside the manifest directory: " + relative_path.string()
-        );
+        throw std::runtime_error("frame path resolves outside the manifest directory: " +
+                                 relative_path.string());
     }
     if (!std::filesystem::is_regular_file(candidate)) {
         throw std::runtime_error("frame path is not a regular file: " + relative_path.string());
@@ -56,22 +52,18 @@ std::filesystem::path resolve_frame_path(
     return candidate;
 }
 
-}  // namespace
+} // namespace
 
-std::vector<VerifiedFrame> verify_manifest_files(
-    const std::filesystem::path& manifest_path,
-    std::size_t max_records,
-    std::uint64_t max_file_bytes
-) {
+std::vector<VerifiedFrame> verify_manifest_files(const std::filesystem::path& manifest_path,
+                                                 std::size_t max_records,
+                                                 std::uint64_t max_file_bytes) {
     const auto records = load_manifest(manifest_path, max_records);
     return verify_frame_records(manifest_path, records, max_file_bytes);
 }
 
-std::vector<VerifiedFrame> verify_frame_records(
-    const std::filesystem::path& manifest_path,
-    const std::vector<FrameRecord>& records,
-    std::uint64_t max_file_bytes
-) {
+std::vector<VerifiedFrame> verify_frame_records(const std::filesystem::path& manifest_path,
+                                                const std::vector<FrameRecord>& records,
+                                                std::uint64_t max_file_bytes) {
     std::vector<VerifiedFrame> verified;
     verified.reserve(records.size());
 
@@ -79,9 +71,8 @@ std::vector<VerifiedFrame> verify_frame_records(
         const auto resolved = resolve_frame_path(manifest_path, record.path);
         const auto digest = sha256_file(resolved, max_file_bytes);
         if (digest.sha256 != record.sha256) {
-            throw std::runtime_error(
-                "SHA-256 mismatch for frame " + record.frame_id + ": " + record.path.string()
-            );
+            throw std::runtime_error("SHA-256 mismatch for frame " + record.frame_id + ": " +
+                                     record.path.string());
         }
         verified.push_back(VerifiedFrame{record, resolved, digest.bytes});
     }
@@ -89,4 +80,4 @@ std::vector<VerifiedFrame> verify_frame_records(
     return verified;
 }
 
-}  // namespace asl::replay
+} // namespace asl::replay

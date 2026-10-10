@@ -4,10 +4,12 @@ on:
   push:
     paths:
       - "native/**"
+      - ".clang-format"
       - ".github/workflows/native-ci.yml"
   pull_request:
     paths:
       - "native/**"
+      - ".clang-format"
       - ".github/workflows/native-ci.yml"
   workflow_dispatch:
 
@@ -45,6 +47,11 @@ jobs:
       - name: Install libpng (macOS)
         if: runner.os == 'macOS'
         run: brew install libpng
+
+      - name: Check C++ formatting
+        run: |
+          python3 -m pip install clang-format==18.1.8
+          clang-format --dry-run --Werror native/include/asl/*.hpp native/src/*.cpp native/tests/*.cpp
 
       - name: Install pinned model-reference test dependency
         run: python3 -m pip install Pillow==12.3.0

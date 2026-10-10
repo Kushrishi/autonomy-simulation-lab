@@ -13,14 +13,9 @@ struct RgbImage {
     std::vector<std::uint8_t> pixels;
 };
 
-RgbImage decode_png_rgb8(
-    const std::filesystem::path& path,
-    std::uint64_t max_pixels = 100000000
-);
+RgbImage decode_png_rgb8(const std::filesystem::path& path, std::uint64_t max_pixels = 100000000);
 
-RgbImage decode_png_rgb8_bytes(
-    const std::vector<unsigned char>& bytes,
-    std::uint64_t max_pixels = 100000000
-);
+RgbImage decode_png_rgb8_bytes(const std::vector<unsigned char>& bytes,
+                               std::uint64_t max_pixels = 100000000);
 
-}  // namespace asl::replay
+} // namespace asl::replay

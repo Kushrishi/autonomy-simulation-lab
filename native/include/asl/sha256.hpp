@@ -22,4 +22,4 @@ struct FileSnapshot {
 // Digest and consumers share these exact bounded bytes, without reopening a path.
 FileSnapshot read_file_snapshot(const std::filesystem::path& path, std::uint64_t max_bytes);
 
-}  // namespace asl::replay
+} // namespace asl::replay
