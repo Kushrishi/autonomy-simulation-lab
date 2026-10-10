@@ -21,17 +21,15 @@ std::array<std::string, 4> split_row(const std::string& line, std::size_t line_n
         const auto end = line.find('\t', start);
         if (field + 1 == fields.size()) {
             if (end != std::string::npos) {
-                throw std::runtime_error(
-                    "line " + std::to_string(line_number) + ": expected exactly four tab-separated fields"
-                );
+                throw std::runtime_error("line " + std::to_string(line_number) +
+                                         ": expected exactly four tab-separated fields");
             }
             fields[field] = line.substr(start);
             break;
         }
         if (end == std::string::npos) {
-            throw std::runtime_error(
-                "line " + std::to_string(line_number) + ": expected exactly four tab-separated fields"
-            );
+            throw std::runtime_error("line " + std::to_string(line_number) +
+                                     ": expected exactly four tab-separated fields");
         }
         fields[field] = line.substr(start, end - start);
         start = end + 1;
@@ -62,20 +60,18 @@ std::uint64_t parse_timestamp(const std::string& value, std::size_t line_number)
     try {
         timestamp = std::stoull(value, &parsed, 10);
     } catch (const std::exception&) {
-        throw std::runtime_error(
-            "line " + std::to_string(line_number) + ": timestamp_ns is not an unsigned integer"
-        );
+        throw std::runtime_error("line " + std::to_string(line_number) +
+                                 ": timestamp_ns is not an unsigned integer");
     }
 
     if (parsed != value.size()) {
-        throw std::runtime_error(
-            "line " + std::to_string(line_number) + ": timestamp_ns is not an unsigned integer"
-        );
+        throw std::runtime_error("line " + std::to_string(line_number) +
+                                 ": timestamp_ns is not an unsigned integer");
     }
     return timestamp;
 }
 
-}  // namespace
+} // namespace
 
 std::vector<FrameRecord> parse_manifest(std::istream& input, std::size_t max_records) {
     if (max_records == 0) {
@@ -105,7 +101,8 @@ std::vector<FrameRecord> parse_manifest(std::istream& input, std::size_t max_rec
             line.pop_back();
         }
         if (line.empty()) {
-            throw std::runtime_error("line " + std::to_string(line_number) + ": blank rows are not allowed");
+            throw std::runtime_error("line " + std::to_string(line_number) +
+                                     ": blank rows are not allowed");
         }
         if (records.size() >= max_records) {
             throw std::runtime_error("manifest exceeds configured record limit");
@@ -119,31 +116,26 @@ std::vector<FrameRecord> parse_manifest(std::istream& input, std::size_t max_rec
             throw std::runtime_error("line " + std::to_string(line_number) + ": path is empty");
         }
         if (!is_lower_hex_sha256(fields[3])) {
-            throw std::runtime_error(
-                "line " + std::to_string(line_number) + ": sha256 must be 64 lowercase hexadecimal characters"
-            );
+            throw std::runtime_error("line " + std::to_string(line_number) +
+                                     ": sha256 must be 64 lowercase hexadecimal characters");
         }
 
         const auto timestamp = parse_timestamp(fields[1], line_number);
         if (have_previous_timestamp && timestamp <= previous_timestamp) {
-            throw std::runtime_error(
-                "line " + std::to_string(line_number) + ": timestamps must be strictly increasing"
-            );
+            throw std::runtime_error("line " + std::to_string(line_number) +
+                                     ": timestamps must be strictly increasing");
         }
         if (!seen_ids.insert(fields[0]).second) {
-            throw std::runtime_error(
-                "line " + std::to_string(line_number) + ": duplicate frame_id: " + fields[0]
-            );
+            throw std::runtime_error("line " + std::to_string(line_number) +
+                                     ": duplicate frame_id: " + fields[0]);
         }
 
-        records.push_back(
-            FrameRecord{
-                std::move(fields[0]),
-                timestamp,
-                std::filesystem::path(std::move(fields[2])),
-                std::move(fields[3]),
-            }
-        );
+        records.push_back(FrameRecord{
+            std::move(fields[0]),
+            timestamp,
+            std::filesystem::path(std::move(fields[2])),
+            std::move(fields[3]),
+        });
         previous_timestamp = timestamp;
         have_previous_timestamp = true;
     }
@@ -163,4 +155,4 @@ std::vector<FrameRecord> load_manifest(const std::filesystem::path& path, std::s
     return parse_manifest(input, max_records);
 }
 
-}  // namespace asl::replay
+} // namespace asl::replay

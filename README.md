@@ -73,6 +73,9 @@ On Windows PowerShell, use `npm.cmd` if script-execution policy blocks `npm`.
 
 ## Repository guide
 
+- [Architecture](docs/architecture.md)
+- [Contributing](CONTRIBUTING.md)
+
 - [Native contracts and build options](native/README.md)
 - [Recording acquisition](native/ACQUISITION.md)
 - [Spatial adapters](native/SPATIAL_ADAPTERS.md)

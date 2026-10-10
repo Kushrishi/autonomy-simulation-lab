@@ -50,10 +50,11 @@ RgbImage finish_rgb(png_image& image, const std::string& filename, std::uint64_t
     };
 }
 
-}  // namespace
+} // namespace
 
 RgbImage decode_png_rgb8(const std::filesystem::path& path, std::uint64_t max_pixels) {
-    if (max_pixels == 0U) throw std::invalid_argument("max_pixels must be greater than zero");
+    if (max_pixels == 0U)
+        throw std::invalid_argument("max_pixels must be greater than zero");
     png_image image{};
     image.version = PNG_IMAGE_VERSION;
     const auto filename = path.string();
@@ -66,10 +67,12 @@ RgbImage decode_png_rgb8(const std::filesystem::path& path, std::uint64_t max_pi
 }
 
 RgbImage decode_png_rgb8_bytes(const std::vector<unsigned char>& bytes, std::uint64_t max_pixels) {
-    if (max_pixels == 0U) throw std::invalid_argument("max_pixels must be greater than zero");
+    if (max_pixels == 0U)
+        throw std::invalid_argument("max_pixels must be greater than zero");
     png_image image{};
     image.version = PNG_IMAGE_VERSION;
-    if (bytes.empty() || png_image_begin_read_from_memory(&image, bytes.data(), bytes.size()) == 0) {
+    if (bytes.empty() ||
+        png_image_begin_read_from_memory(&image, bytes.data(), bytes.size()) == 0) {
         const std::string detail = image.message;
         png_image_free(&image);
         throw std::runtime_error("unable to read in-memory PNG header: " + detail);
@@ -77,4 +80,4 @@ RgbImage decode_png_rgb8_bytes(const std::vector<unsigned char>& bytes, std::uin
     return finish_rgb(image, "verified byte snapshot", max_pixels);
 }
 
-}  // namespace asl::replay
+} // namespace asl::replay

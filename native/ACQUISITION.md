@@ -1,9 +1,9 @@
-# Human acquisition handoff: KITTI raw synchronized data
+# Acquiring a KITTI recording
 
 No account is created and no data is downloaded by these tools. Register and
 acquire through the [official raw-data page](https://www.cvlibs.net/datasets/kitti/raw_data.php).
 
-Proposed fixed workload: **KITTI Raw, synced/rectified,
+Validated example sequence: **KITTI Raw, synced/rectified,
 2011_09_26_drive_0001_sync** with its 2011_09_26 calibration package.
 Download the synced sequence and matching calibration; the official archive may
 contain extra streams. The adapter needs only:
@@ -31,20 +31,8 @@ Dataset*, IJRR 2013. Read the current [site terms](https://www.cvlibs.net/datase
 and registration conditions yourself; don't assume commercial or employer use.
 This project does not redistribute KITTI data. No mirror bypass is supported.
 
-Suggested truthful purpose, adapt as needed:
-
-> Independent non-commercial engineering research on reproducible replay and
-> regression evaluation of recorded camera and positioning data. I will use a
-> small synchronized sequence locally to validate timestamps, coordinate frames,
-> preprocessing and inference reproducibility, and will publish code and
-> acquisition instructions rather than redistribute the dataset.
-
-This is independent work, not research conducted for Xona. If registration
-restricts independent noncommercial use, obtain clarification rather than
-misstating an academic affiliation.
-
 After legal acquisition, use the existing adapter as documented in
-[SPATIAL.md](SPATIAL_ADAPTERS.md). [The 7 October validation record](REAL_SEQUENCE_VALIDATION_2026_10.md) documents
+[spatial adapter instructions](SPATIAL_ADAPTERS.md). [The 7 October validation record](REAL_SEQUENCE_VALIDATION_2026_10.md) documents
 complete real-sequence replay, MobileNet repeats and RRD export/reopen. Interactive
 viewer inspection remains open; import/export has one warm-cache timing observation. No sensor fusion is
-claimed. No release or project rename is authorized by acquisition alone.
+claimed. See [native release acceptance](RELEASE_READINESS_2026_10.md) for current requirements.

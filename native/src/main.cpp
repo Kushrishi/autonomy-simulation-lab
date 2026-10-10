@@ -15,7 +15,8 @@ namespace {
 
 std::uint64_t parse_positive(const char* value, const char* name) {
     try {
-        if (std::string(value).empty() || std::string(value).find_first_not_of("0123456789") != std::string::npos)
+        if (std::string(value).empty() ||
+            std::string(value).find_first_not_of("0123456789") != std::string::npos)
             throw std::invalid_argument("invalid");
         std::size_t parsed = 0;
         const auto result = std::stoull(value, &parsed, 10);
@@ -29,20 +30,23 @@ std::uint64_t parse_positive(const char* value, const char* name) {
 }
 
 void usage() {
-    std::cerr
-        << "usage:\n"
-        << "  asl-replay validate-manifest MANIFEST.tsv [MAX_RECORDS]\n"
-        << "  asl-replay verify-files MANIFEST.tsv [MAX_RECORDS] [MAX_FILE_BYTES]\n"
-        << "  asl-replay decode-png IMAGE.png [MAX_PIXELS]\n";
+    std::cerr << "usage:\n"
+              << "  asl-replay validate-manifest MANIFEST.tsv [MAX_RECORDS]\n"
+              << "  asl-replay verify-files MANIFEST.tsv [MAX_RECORDS] [MAX_FILE_BYTES]\n"
+              << "  asl-replay decode-png IMAGE.png [MAX_PIXELS]\n";
 #ifdef ASL_HAS_ORT
-    std::cerr << "  asl-replay run MANIFEST.tsv --model MODEL.onnx --model-sha SHA256 --out RESULTS.jsonl [--preprocessing CONTRACT]\n";
+    std::cerr
+        << "  asl-replay run MANIFEST.tsv --model MODEL.onnx --model-sha SHA256 --out RESULTS.jsonl [--preprocessing CONTRACT]\n";
 #endif
 }
 
-}  // namespace
+} // namespace
 
 int main(int argc, char** argv) {
-    if (argc == 2 && std::string(argv[1]) == "--help") { usage(); return 0; }
+    if (argc == 2 && std::string(argv[1]) == "--help") {
+        usage();
+        return 0;
+    }
     if (argc < 3) {
         usage();
         return 2;
@@ -56,7 +60,8 @@ int main(int argc, char** argv) {
             std::map<std::string, std::string> options;
             for (int i = 3; i < argc; i += 2) {
                 const std::string key = argv[i];
-                if (key != "--model" && key != "--model-sha" && key != "--out" && key != "--preprocessing")
+                if (key != "--model" && key != "--model-sha" && key != "--out" &&
+                    key != "--preprocessing")
                     throw std::invalid_argument("unknown run option: " + key);
                 if (i + 1 >= argc || std::string(argv[i + 1]).rfind("--", 0) == 0)
                     throw std::invalid_argument("missing value for " + key);
@@ -64,9 +69,12 @@ int main(int argc, char** argv) {
                     throw std::invalid_argument("duplicate run option: " + key);
             }
             for (const auto& key : {"--model", "--model-sha", "--out"})
-                if (!options.count(key)) throw std::invalid_argument(std::string("required run option: ") + key);
-            asl::replay::run_inference(argv[2], options.at("--model"), options.at("--model-sha"), options.at("--out"),
-                                      options.count("--preprocessing") ? options.at("--preprocessing") : "asl-rgb-bilinear-v1");
+                if (!options.count(key))
+                    throw std::invalid_argument(std::string("required run option: ") + key);
+            asl::replay::run_inference(
+                argv[2], options.at("--model"), options.at("--model-sha"), options.at("--out"),
+                options.count("--preprocessing") ? options.at("--preprocessing")
+                                                 : "asl-rgb-bilinear-v1");
             return 0;
         }
 #endif
@@ -86,9 +94,8 @@ int main(int argc, char** argv) {
             const auto max_records =
                 argc >= 4 ? static_cast<std::size_t>(parse_positive(argv[3], "MAX_RECORDS"))
                           : static_cast<std::size_t>(1000000);
-            const auto max_file_bytes =
-                argc == 5 ? parse_positive(argv[4], "MAX_FILE_BYTES")
-                          : static_cast<std::uint64_t>(536870912);
+            const auto max_file_bytes = argc == 5 ? parse_positive(argv[4], "MAX_FILE_BYTES")
+                                                  : static_cast<std::uint64_t>(536870912);
 
             const auto frames =
                 asl::replay::verify_manifest_files(argv[2], max_records, max_file_bytes);
@@ -103,9 +110,8 @@ int main(int argc, char** argv) {
         }
 
         if (command == "decode-png" && argc <= 4) {
-            const auto max_pixels =
-                argc == 4 ? parse_positive(argv[3], "MAX_PIXELS")
-                          : static_cast<std::uint64_t>(100000000);
+            const auto max_pixels = argc == 4 ? parse_positive(argv[3], "MAX_PIXELS")
+                                              : static_cast<std::uint64_t>(100000000);
             const auto image = asl::replay::decode_png_rgb8(argv[2], max_pixels);
             std::cout << "PNG valid\n";
             std::cout << "width: " << image.width << "\n";

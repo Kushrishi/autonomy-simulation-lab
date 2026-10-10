@@ -18,9 +18,7 @@ struct FrameRecord {
 
 std::vector<FrameRecord> parse_manifest(std::istream& input, std::size_t max_records = 1000000);
 
-std::vector<FrameRecord> load_manifest(
-    const std::filesystem::path& path,
-    std::size_t max_records = 1000000
-);
+std::vector<FrameRecord> load_manifest(const std::filesystem::path& path,
+                                       std::size_t max_records = 1000000);
 
-}  // namespace asl::replay
+} // namespace asl::replay

@@ -11,13 +11,11 @@ namespace {
 const std::string kHashA(64, 'a');
 const std::string kHashB(64, 'b');
 
-std::string manifest(
-    const std::string& first_id = "frame-0001",
-    const std::string& second_id = "frame-0002",
-    const std::string& first_timestamp = "100",
-    const std::string& second_timestamp = "200",
-    const std::string& second_hash = kHashB
-) {
+std::string manifest(const std::string& first_id = "frame-0001",
+                     const std::string& second_id = "frame-0002",
+                     const std::string& first_timestamp = "100",
+                     const std::string& second_timestamp = "200",
+                     const std::string& second_hash = kHashB) {
     return "frame_id\ttimestamp_ns\tpath\tsha256\n" + first_id + "\t" + first_timestamp +
            "\tframes/0001.png\t" + kHashA + "\n" + second_id + "\t" + second_timestamp +
            "\tframes/0002.png\t" + second_hash + "\n";
@@ -34,16 +32,14 @@ void require_failure(const std::string& input, const std::string& expected) {
     try {
         static_cast<void>(asl::replay::parse_manifest(stream));
     } catch (const std::exception& error) {
-        require(
-            std::string(error.what()).find(expected) != std::string::npos,
-            "unexpected error: " + std::string(error.what())
-        );
+        require(std::string(error.what()).find(expected) != std::string::npos,
+                "unexpected error: " + std::string(error.what()));
         return;
     }
     throw std::runtime_error("expected manifest parsing to fail");
 }
 
-}  // namespace
+} // namespace
 
 int main() {
     try {
@@ -68,10 +64,8 @@ int main() {
                 static_cast<void>(asl::replay::parse_manifest(stream, 1));
                 throw std::runtime_error("expected record limit failure");
             } catch (const std::exception& error) {
-                require(
-                    std::string(error.what()).find("record limit") != std::string::npos,
-                    "unexpected record-limit error"
-                );
+                require(std::string(error.what()).find("record limit") != std::string::npos,
+                        "unexpected record-limit error");
             }
         }
 
