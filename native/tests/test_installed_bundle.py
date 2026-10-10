@@ -59,7 +59,13 @@ def main(build, ort_root):
             summary = json.loads(first.stdout)
             assert summary["exact_repeat_passed"] is True
             assert summary["detected_fault_frames"] == ["f0"]
+            assert summary["executed_configuration_changed_frames"] == ["f0", "f1"]
             assert Path(summary["report"]).is_file()
+            assert Path(summary["configuration_report"]).is_file()
+            saved = json.loads(Path(summary["report"]).read_text())
+            assert saved["executed_configuration_comparison"]["changed_frames"] == [
+                "f0", "f1"
+            ]
             again = subprocess.run(
                 command, env=env, cwd=tmp, check=False, capture_output=True, text=True
             )
