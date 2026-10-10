@@ -2,7 +2,8 @@
 
 The installed recording-to-comparison-to-viewer workflow passed on all 108 frames
 of the previously authorized KITTI recording. This closes the real-input
-installation check; human desktop acceptance remains pending.
+installation check for the completed artifacts; output cleanup and human desktop
+acceptance remain pending.
 
 Source: `1e2c273b8848028413cd6fe1a73b834ced181ee6`.
 The prospective execution record is retained privately. Exactly two inference
@@ -50,6 +51,19 @@ candidate records, comparison and spatial records. Rerun verification passed.
 A decoded readback found 108 rows in each of six model, latency, changed-frame,
 position and synchronization channels; every changed marker was 1. A separate
 inspection blueprint also passed RRD verification.
+
+## Output cleanup limitation
+
+After the successful candidate process exited, its complete JSONL had 108 valid
+records, but a 680,458-byte `.partial` file and an empty `.lock` directory
+were also present. The partial file is an exact byte prefix of the complete
+output (55 newline-separated fragments), with SHA-256
+`cb8e72a58746cbe6f5faed13145f8a97c26d95cd2f755c668050a7f5b92417c9`.
+No inference process remained. The cause is unresolved; the successful exit
+and complete validated output do not prove cleanup succeeded. The residue is
+preserved in the private diagnostic packet. No rerun or automatic deletion was
+used to conceal it. A focused filesystem/publication investigation is required
+before declaring the full lifecycle clean.
 
 ## Remaining acceptance
 
