@@ -19,6 +19,15 @@ def write(path, value):
         stream.write(json.dumps(value, indent=2, allow_nan=False) + "\n")
 
 
+def source_hashes(binary, manifest, model):
+    """Stream the three execution inputs without retaining model bytes in memory."""
+    hashes = {}
+    for name, path in (("binary", binary), ("manifest", manifest), ("model", model)):
+        with path.open("rb") as stream:
+            hashes[name] = hashlib.file_digest(stream, "sha256").hexdigest()
+    return hashes
+
+
 def run(binary, manifest, model, model_sha, output, baseline, candidate, timeout=300):
     if baseline not in CONTRACTS or candidate not in CONTRACTS:
         raise ValueError("unknown preprocessing contract")
@@ -26,11 +35,12 @@ def run(binary, manifest, model, model_sha, output, baseline, candidate, timeout
         raise ValueError("timeout must be finite and positive")
     binary, manifest, model = (Path(p).resolve() for p in (binary, manifest, model))
     output = Path(output).resolve()
-    binary_sha = hashlib.sha256(binary.read_bytes()).hexdigest()
+    sources = source_hashes(binary, manifest, model)
     output.mkdir()
     plan = {
         "schema": "asl-executed-comparison-v1",
-        "binary_sha256": binary_sha,
+        "binary_sha256": sources["binary"],
+        "source_sha256": sources,
         "host": platform.platform(),
         "model_sha256": model_sha,
         "baseline": baseline,
@@ -44,7 +54,11 @@ def run(binary, manifest, model, model_sha, output, baseline, candidate, timeout
     executions = []
     active = "baseline"
     try:
+        if sources["model"] != model_sha:
+            raise ValueError("model SHA-256 mismatch before execution")
         for active, contract in (("baseline", baseline), ("candidate", candidate)):
+            if source_hashes(binary, manifest, model) != sources:
+                raise ValueError("execution inputs changed before " + active)
             command = [
                 str(binary),
                 "run",
@@ -85,12 +99,33 @@ def run(binary, manifest, model, model_sha, output, baseline, candidate, timeout
                 raise ValueError(
                     f"{active} output cleanup incomplete; preserved partial/lock evidence"
                 )
+            if source_hashes(binary, manifest, model) != sources:
+                raise ValueError("execution inputs changed during " + active)
+        records = {
+            name: load(output / (name + ".jsonl")) for name in ("baseline", "candidate")
+        }
+        for name, contract in (("baseline", baseline), ("candidate", candidate)):
+            if any(
+                row["recording_sha256"] != sources["manifest"]
+                or row["model_sha256"] != sources["model"]
+                or row["preprocessing"] != contract
+                for row in records[name]
+            ):
+                raise ValueError("saved records differ from planned inputs: " + name)
         comparison = compare(
-            load(output / "baseline.jsonl"),
-            load(output / "candidate.jsonl"),
+            records["baseline"],
+            records["candidate"],
             atol=plan["atol"],
             rtol=plan["rtol"],
         )
+        if comparison["missing"] or comparison["extra"] or comparison["reordered"] or any(
+            set(row["identity_differences"]) - {"preprocessing"}
+            for row in comparison["frames"]
+        ):
+            # Preserve the actual differences as diagnostic evidence, not a valid
+            # controlled preprocessing comparison.
+            write(output / "comparison.json", comparison)
+            raise ValueError("comparison contains unplanned input or execution identities")
         report = {
             "schema": plan["schema"],
             "execution_scope": plan["scope"],
