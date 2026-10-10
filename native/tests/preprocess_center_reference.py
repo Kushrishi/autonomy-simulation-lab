@@ -23,6 +23,9 @@ def main(probe):
         (1, 7),
         (301, 257),
         (257, 301),
+        (1242, 375),  # Retained KITTI landscape geometry: most columns are cropped.
+        (375, 1242),  # Portrait counterpart: most rows are cropped.
+        (641, 479),   # Odd crop offsets and noninteger downsampling ratio.
     ]:
         pixels = bytes((i * 73 + i // 3 * 17) % 256 for i in range(w * h * 3))
         image = Image.frombytes("RGB", (w, h), pixels)
