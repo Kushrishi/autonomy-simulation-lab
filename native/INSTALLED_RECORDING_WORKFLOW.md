@@ -93,6 +93,7 @@ Headless export, SDK validation and automated checks do not certify usability.
 The relocated installation test runs both configurations on the bundled synthetic
 recording with the original ONNX Runtime directory unavailable, then validates
 candidate-to-comparison viewer preparation using installed tools only. It needs
-no Rerun dependency for that boundary check. Existing 108-frame real-data evidence
-is described in the repository's dated validation report. This packaging change
-is not a fresh real-sequence execution or human acceptance result.
+no Rerun dependency for that boundary check. The subsequent [installed real-recording validation](INSTALLED_RECORDING_VALIDATION_2026_10_10.md)
+executed both configurations on all 108 recovered real frames, exported and
+verified the candidate recording, and prepared its viewer layout. Human desktop
+acceptance remains pending.
