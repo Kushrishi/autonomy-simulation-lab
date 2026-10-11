@@ -474,7 +474,8 @@ function App() {
         algorithm: selectedPlanner,
         pathLength: Math.max(result.path.length - 1, 0),
         nodesVisited: result.visited.length,
-        currentStep: visitedIndex,
+        // Search visits are not robot movement steps. The robot remains at start.
+        currentStep: 0,
         runtimeMs,
         status:
           visitedIndex === result.visited.length - 1 ? "complete" : "searching",
