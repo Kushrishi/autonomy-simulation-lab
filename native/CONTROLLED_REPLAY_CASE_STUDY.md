@@ -16,6 +16,25 @@ candidate/baseline, baseline/candidate. These are one-host observations, not a
 confidence interval or a universal throughput guarantee. Startup/cache/scheduling
 were not fully controlled. Retained partial-output residue remains disclosed.
 
+Summed preprocessing-stage counters over each 108-frame run (baseline/candidate
+milliseconds): 700.467408/288.367646, 670.883524/291.443624,
+680.066077/288.866484. Paired reductions are 58.8321%, 56.5582%, 57.5238%;
+median **57.5237622%**. These stage counters exclude other work and startup;
+they do not replace the whole-process wall-time result above.
+
+The authentic [whole-process figure](../docs/assets/native_asl_matched_wall_time.png)
+was reused without regeneration (SHA-256
+`fd397cfbb8feea8dfc7997299106d8f370df5783f1876b72bfed4b56478045f2`).
+Its [source data](../docs/assets/performance_data.json) were checked against the
+retained summary; the [original rendering script](../docs/assets/make_performance_figure.py)
+renders data only and executes no inference. The source packet is
+`ASL_Center_Crop_Real_Probe_20261010.zip`, SHA-256
+`05de26f6e43b53015d15fcf5e5cb198dfd6b120f12595c1546c54f6473fb967a`;
+summary SHA-256
+`e6d2735313be3e91a42bd09f07d025372d2094c42de96419411d9922d42c072f`.
+The measured environment was Linux x86_64, GCC 13.3 Release, MobileNetV2,
+ONNX Runtime 1.30.0 CPU, one inference thread with graph optimization disabled.
+
 The original C++ optimization avoids resize rows/columns discarded by the
 center crop while retaining filtering coefficients, rounding and accumulation
 order. MobileNetV2 supplies the model, ONNX Runtime executes it, libpng decodes
@@ -40,3 +59,9 @@ For desktop acceptance, open baseline/candidate configuration identities in
 Rerun, inspect frames 95/93/94, confirm camera/numerical channels align, and
 close/reopen. Earlier owner inspection is maintainer feedback. Headless readback
 is not interactive acceptance or independent-user evidence.
+
+Use the older complete `ASL_Real_Viewer_Comparison_20261011.zip` packet
+(SHA-256 `05189903903d8efc49b637e7e7ae99deaf793de1cfcba70ef73c18e98e336324`).
+The newer `ASL_Real_Viewer_Provenance_20261011.zip` is incomplete and must not be
+presented as its replacement. This bounded case study is in maintenance; desktop
+inspection remains an explicit limit, not a reason to add features or rerun inference.
