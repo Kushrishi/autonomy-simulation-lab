@@ -116,6 +116,23 @@ def prepare(manifest, results, spatial=None, comparison=None):
     return recording_hash, records, poses, changes, images
 
 
+def viewer_recording_id(recording_hash, records, poses, changes):
+    """Different replay evidence must not merge into one Rerun logical recording.
+
+    Keep application ID shared for blueprint reuse; bind recording ID to every
+    displayed source, including latency, spatial context and comparison highlights.
+    """
+    content = {
+        "schema": "asl-viewer-recording-v1",
+        "manifest_sha256": recording_hash,
+        "results_sha256": result_digest(records),
+        "poses": poses,
+        "changed_frames": sorted(changes),
+    }
+    raw = json.dumps(content, sort_keys=True, separators=(",", ":"), allow_nan=False)
+    return hashlib.sha256(raw.encode()).hexdigest()
+
+
 def export(manifest, results, output, spatial=None, comparison=None):
     import rerun as rr
 
@@ -127,7 +144,12 @@ def export(manifest, results, output, spatial=None, comparison=None):
     output = Path(output)
     with output.open("xb"):
         pass
-    rr.init("asl_replay", recording_id=recording_hash[:32], spawn=False, strict=True)
+    rr.init(
+        "asl_replay",
+        recording_id=viewer_recording_id(recording_hash, records, poses, changes),
+        spawn=False,
+        strict=True,
+    )
     rr.save(output)
     origin_time = records[0]["timestamp_ns"]
     for i, (row, image) in enumerate(zip(records, images)):

@@ -38,6 +38,26 @@ def main():
         # Matching frame IDs alone cannot bind a highlight report to this replay.
         candidate = copy.deepcopy(rows)
         candidate[0]["output"][0] += 0.25
+        # A manifest identifies input images, not an inference/configuration run.
+        # Shared recording IDs would merge these distinct results in Rerun.
+        recording_id = viewer.viewer_recording_id(identity, rows, poses, set())
+        assert recording_id == viewer.viewer_recording_id(identity, rows, poses, set())
+        assert recording_id != viewer.viewer_recording_id(
+            identity, candidate, poses, set()
+        )
+        latency = copy.deepcopy(rows)
+        latency[0]["latency_ms"]["total"] += 1
+        assert recording_id != viewer.viewer_recording_id(
+            identity, latency, poses, set()
+        )
+        changed_poses = copy.deepcopy(poses)
+        changed_poses[rows[0]["frame_id"]]["position_enu_m"][0] += 1
+        assert recording_id != viewer.viewer_recording_id(
+            identity, rows, changed_poses, set()
+        )
+        assert recording_id != viewer.viewer_recording_id(
+            identity, rows, poses, {rows[0]["frame_id"]}
+        )
         report = compare(rows, candidate, atol=0, rtol=0)
         comparison = root / "comparison.json"
         comparison.write_text(json.dumps(report))
@@ -46,9 +66,9 @@ def main():
         }
         candidate_results = root / "candidate.jsonl"
         candidate_results.write_text("".join(json.dumps(r) + "\n" for r in candidate))
-        assert viewer.prepare(manifest, candidate_results, comparison=comparison)[3] == {
-            rows[0]["frame_id"]
-        }
+        assert viewer.prepare(manifest, candidate_results, comparison=comparison)[
+            3
+        ] == {rows[0]["frame_id"]}
         for fault in ("unbound", "stale", "string", "duplicate", "unknown", "object"):
             bad = copy.deepcopy(report)
             if fault == "unbound":
@@ -129,8 +149,14 @@ def main():
         manifest.write_bytes(source)
         results.write_text("".join(json.dumps(r) + "\n" for r in rows))
         captured = []
+        initialized = []
+
+        def initialize(application_id, **kwargs):
+            initialized.append((application_id, kwargs["recording_id"]))
+            image.write_bytes(b"changed after prepare")
+
         sdk = SimpleNamespace(
-            init=lambda *a, **k: image.write_bytes(b"changed after prepare"),
+            init=initialize,
             save=lambda output: None,
             set_time=lambda *a, **k: None,
             log=lambda *a, **k: None,
@@ -145,6 +171,10 @@ def main():
             output = root / "viewer.rrd"
             viewer.export(manifest, results, output)
             assert captured[0] == original
+            image.write_bytes(original)
+            viewer.export(manifest, candidate_results, root / "candidate.rrd")
+            assert initialized[0][0] == initialized[1][0] == "asl_replay"
+            assert initialized[0][1] != initialized[1][1]
             image.write_bytes(original)
             output.write_bytes(b"existing evidence")
             try:
