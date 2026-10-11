@@ -149,8 +149,14 @@ def main():
         manifest.write_bytes(source)
         results.write_text("".join(json.dumps(r) + "\n" for r in rows))
         captured = []
+        initialized = []
+
+        def initialize(application_id, **kwargs):
+            initialized.append((application_id, kwargs["recording_id"]))
+            image.write_bytes(b"changed after prepare")
+
         sdk = SimpleNamespace(
-            init=lambda *a, **k: image.write_bytes(b"changed after prepare"),
+            init=initialize,
             save=lambda output: None,
             set_time=lambda *a, **k: None,
             log=lambda *a, **k: None,
@@ -165,6 +171,10 @@ def main():
             output = root / "viewer.rrd"
             viewer.export(manifest, results, output)
             assert captured[0] == original
+            image.write_bytes(original)
+            viewer.export(manifest, candidate_results, root / "candidate.rrd")
+            assert initialized[0][0] == initialized[1][0] == "asl_replay"
+            assert initialized[0][1] != initialized[1][1]
             image.write_bytes(original)
             output.write_bytes(b"existing evidence")
             try:
