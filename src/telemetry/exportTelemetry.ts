@@ -88,6 +88,12 @@ export function convertSamplesToCsvRows(payload: TelemetryExportPayload): string
     "localization_error",
     "path_row",
     "path_col",
+    "range_estimated_row",
+    "range_estimated_col",
+    "range_error",
+    "kalman_estimated_row",
+    "kalman_estimated_col",
+    "kalman_error",
   ];
 
   const rowCount = Math.max(
@@ -114,6 +120,12 @@ export function convertSamplesToCsvRows(payload: TelemetryExportPayload): string
       formatNumber(sample?.error),
       pathPosition?.row.toString() ?? "",
       pathPosition?.col.toString() ?? "",
+      formatNumber(sample?.rangeEstimatedPosition.row),
+      formatNumber(sample?.rangeEstimatedPosition.col),
+      formatNumber(sample?.rangeError),
+      formatNumber(sample?.kalmanEstimatedPosition.row),
+      formatNumber(sample?.kalmanEstimatedPosition.col),
+      formatNumber(sample?.kalmanError),
     ]);
   }
 

@@ -56,6 +56,17 @@ int main() {
         require_failure(manifest("frame-0001", "frame-0001"), "duplicate frame_id");
         require_failure(manifest("frame-0001", "frame-0002", "200", "100"), "strictly increasing");
         require_failure(manifest("frame-0001", "frame-0002", "abc", "200"), "unsigned integer");
+        for (const auto& timestamp : {"-1", "+100", " 100", "100 ", "18446744073709551616"}) {
+            require_failure(manifest("frame-0001", "frame-0002", timestamp, "200"),
+                            "unsigned integer");
+        }
+        {
+            std::istringstream stream(manifest("frame-0001", "frame-0002", "0",
+                                               "18446744073709551615"));
+            const auto records = asl::replay::parse_manifest(stream);
+            require(records[0].timestamp_ns == 0, "zero timestamp must remain valid");
+            require(records[1].timestamp_ns == UINT64_MAX, "uint64 boundary must remain valid");
+        }
         require_failure(manifest("frame-0001", "frame-0002", "100", "200", "ABC"), "sha256");
 
         {

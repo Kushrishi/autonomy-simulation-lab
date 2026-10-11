@@ -91,6 +91,9 @@ export default function LocalizationPanel({
       )}
 
       <p className="panel-note">
+        Positions and errors use grid-cell units. Errors and RMSE are simulator
+        diagnostics using known ground truth, over the displayed segment through
+        the current step. Replanning restarts the estimators and metrics.
         The measured position simulates noisy position fixes. The smoothed
         estimate applies simple temporal smoothing, the range LS estimate solves
         an unweighted nonlinear parametric least-squares problem from

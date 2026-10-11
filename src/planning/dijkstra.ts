@@ -1,3 +1,4 @@
+import { hasValidEndpoints } from "./validEndpoints";
 import type { PlannerResult, Position, Scenario } from "../simulation/types";
 import { calculatePathCost, getMoveCost } from "../simulation/terrain";
 import { MinPriorityQueue } from "./MinPriorityQueue";
@@ -67,6 +68,9 @@ function getDistance(
 }
 
 export function runDijkstra(scenario: Scenario): PlannerResult {
+  if (!hasValidEndpoints(scenario)) {
+    return { path: [], visited: [], success: false, pathCost: 0 };
+  }
   const openSet = new MinPriorityQueue<Position>();
   const closedSet = new Set<string>();
   const visited: Position[] = [];

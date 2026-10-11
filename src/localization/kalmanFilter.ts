@@ -5,7 +5,7 @@ export type KalmanFilterState = {
   covariance: number[][];
 };
 
-type KalmanFilterConfig = {
+export type KalmanFilterConfig = {
   timeStep: number;
   processNoise: number;
   measurementNoise: number;
@@ -46,15 +46,20 @@ function addMatrices(a: number[][], b: number[][]): number[][] {
 
 function invert2x2(matrix: number[][]): number[][] | null {
   const [[a, b], [c, d]] = matrix;
-  const determinant = a * d - b * c;
+  // Scale before forming the determinant: an absolute cutoff rejects valid
+  // small covariances and unscaled products can overflow for large ones.
+  const scale = Math.max(Math.abs(a), Math.abs(b), Math.abs(c), Math.abs(d));
+  if (!Number.isFinite(scale) || scale === 0) return null;
+  const an = a / scale, bn = b / scale, cn = c / scale, dn = d / scale;
+  const determinant = an * dn - bn * cn;
 
-  if (Math.abs(determinant) < 1e-12) {
+  if (an <= 0 || dn <= 0 || determinant <= 0 || !Number.isFinite(determinant)) {
     return null;
   }
 
   return [
-    [d / determinant, -b / determinant],
-    [-c / determinant, a / determinant],
+    [(dn / determinant) / scale, (-bn / determinant) / scale],
+    [(-cn / determinant) / scale, (an / determinant) / scale],
   ];
 }
 
@@ -68,6 +73,8 @@ function getTransitionMatrix(timeStep: number): number[][] {
 }
 
 function getProcessNoiseMatrix(processNoise: number): number[][] {
+  // Educational discrete model: independent position/velocity increments per
+  // simulation step. This is Q=qI, not a continuous white-acceleration model.
   return [
     [processNoise, 0, 0, 0],
     [0, processNoise, 0, 0],
@@ -125,6 +132,13 @@ export function updateKalmanFilter(
   measuredPosition: ContinuousPosition,
   config = defaultKalmanConfig
 ): KalmanFilterState {
+  if (![config.timeStep, config.processNoise, config.measurementNoise].every(Number.isFinite)
+      || config.timeStep <= 0 || config.processNoise < 0 || config.measurementNoise < 0
+      || ![measuredPosition.row, measuredPosition.col, ...previousState.stateVector].every(Number.isFinite)
+      || previousState.covariance.length !== 4
+      || previousState.covariance.some(row => row.length !== 4 || !row.every(Number.isFinite))) {
+    throw new Error("Kalman update requires finite observations/state, a 4x4 covariance, positive timeStep and nonnegative noise variances");
+  }
   const predictedStateVector = predictStateVector(
     previousState.stateVector,
     config.timeStep
@@ -197,10 +211,17 @@ export function updateKalmanFilter(
     )
   );
 
-  const updatedCovariance = multiplyMatrices(
-    covarianceUpdateMatrix,
-    predictedCovariance
+  // Joseph form retains the positive measurement-noise contribution even
+  // when cancellation makes I-KH nearly zero. Algebraically equivalent to
+  // (I-KH)P in exact arithmetic; more stable in floating point.
+  const josephCovariance = addMatrices(
+    multiplyMatrices(multiplyMatrices(covarianceUpdateMatrix, predictedCovariance),
+      transpose(covarianceUpdateMatrix)),
+    kalmanGain.map(row => kalmanGain.map(other =>
+      config.measurementNoise * (row[0] * other[0] + row[1] * other[1])))
   );
+  const updatedCovariance = josephCovariance.map((row, i) => row.map((value, j) =>
+    (value + josephCovariance[j][i]) / 2));
 
   return {
     stateVector: updatedStateVector,

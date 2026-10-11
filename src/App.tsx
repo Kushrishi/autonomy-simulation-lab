@@ -884,15 +884,15 @@ function App() {
         />
 
         <TelemetryExportPanel
-          scenario={selectedScenario}
+          scenario={{ ...displayedScenario, start: visiblePath[0] ?? displayedScenario.start }}
           algorithm={plannedAlgorithm ?? selectedPlanner}
           metrics={metrics}
           path={visiblePath}
           visited={visibleVisited}
-          localizationSamples={localizationSamples}
+          localizationSamples={localizationSamples.slice(0, localizationStep + 1)}
         />
 
-        <PlannerComparisonPanel scenario={selectedScenario} />
+        <PlannerComparisonPanel scenario={displayedScenario} />
       </section>
     </>
   );
