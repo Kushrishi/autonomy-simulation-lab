@@ -17,7 +17,7 @@ educational demonstration of planning and localization.
 | Browser simulator | Released as v1.0.2; maintenance only | Interactive planning/localization, tests and telemetry export. | Maintain correctness and compatibility; no browser redesign is needed for the native deliverable. |
 | Installed real-recording comparison | Completed with limitations | All 108 original frames recovered with matching hashes; relocated native install executed both preprocessing configurations; comparison and viewer files verified. See [validation](native/INSTALLED_RECORDING_VALIDATION_2026_10_10.md). | Retain this as systems evidence, not perception accuracy or independent cross-host reproduction. |
 | Reliable output and artifact recovery | Packet recovered; historical residue cause open | Complete viewer packet recovered with matching part/archive hashes and ZIP CRCs. The comparison rejects post-exit residue; successful native execution checks lock release. Preserve the original diagnostic files. | Investigate the historical cause only from new evidence or isolated filesystem checks. Detection and checked cleanup do not explain an earlier failure. |
-| Desktop acceptance | Pending person; packet available | Open the retained recording/layout, navigate beginning/middle/end, inspect camera/timing/skew/ENU panels and close/reopen. Record setup, readability and responsiveness failures. | Fix observed usability problems before claiming the native workflow is ready for release. SDK readback is not this check. |
+| Owner graphical inspection | Completed within defined scope | Rerun 0.38.1 loaded both hash-verified accepted recordings on the owner’s Apple Silicon Mac. Twelve screenshots cover frames 0, 53, 107, 95, 93 and 94 on both recordings; Instructor review accepted the inspection. | Independent first use, close/reopen persistence and broader deployment/perception validation remain unestablished. |
 | Native release candidate | Conditional | Document supported OS/dependencies, build from a fresh checkout, run the installed synthetic example and real-data instructions, retain evidence and notices, and complete independent first use. | Publish a narrowly scoped native release after acceptance and release approval; browser v1.0.2 does not imply native release readiness. |
 | Next workload | Deferred | Select a new sensor, model or adapter only from a demonstrated user task and specify an evaluation against a simple existing workflow. | Extend the working replay tool, not an unbounded autonomous-driving platform. A paper requires a separate research contribution. |
 
@@ -28,10 +28,10 @@ is a bounded C++ case study with a measured exact-parity preprocessing optimizat
 no native release, new workload or feature campaign is authorized. Preserve the
 numerical audit and all historical outcomes.
 
-The remaining human check uses the older complete viewer packet through the
-[desktop procedure](native/USABILITY.md#desktop-acceptance-of-the-retained-recording).
-The newer provenance-enhanced packet is incomplete. Inspect retained recordings
-without rerunning inference. Independent first use remains unmeasured. Investigate
+The owner restored the accepted comparison archive and completed bounded Mac
+graphical inspection. The [desktop procedure](native/USABILITY.md#desktop-acceptance-of-the-retained-recording)
+remains available for future authorized use; close/reopen persistence was not established
+by the retained screenshots. Independent first use remains unmeasured. Investigate
 historical residue only if new substantive evidence appears; do not equate current
 checked cleanup with an explanation of the earlier failure.
 
