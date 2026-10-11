@@ -150,6 +150,23 @@ def main():
         results.write_text("".join(json.dumps(r) + "\n" for r in rows))
         captured = []
         initialized = []
+        names = []
+        documents = []
+        logged = []
+        provenance = viewer.recording_provenance(identity, rows)
+        assert provenance["results_sha256"] == viewer.result_digest(rows)
+        assert provenance["manifest_sha256"] == identity
+        assert provenance["frame_count"] == 2
+        assert provenance["configurations"][0]["frame_ids"] == [
+            r["frame_id"] for r in rows
+        ]
+        mixed = copy.deepcopy(rows)
+        mixed[1]["preprocessing"] = "another-validated-configuration"
+        mixed_provenance = viewer.recording_provenance(identity, mixed)
+        assert len(mixed_provenance["configurations"]) == 2
+        assert mixed_provenance["configurations"][1]["frame_ids"] == [
+            rows[1]["frame_id"]
+        ]
 
         def initialize(application_id, **kwargs):
             initialized.append((application_id, kwargs["recording_id"]))
@@ -159,7 +176,9 @@ def main():
             init=initialize,
             save=lambda output: None,
             set_time=lambda *a, **k: None,
-            log=lambda *a, **k: None,
+            log=lambda *a, **k: logged.append((a, k)),
+            send_recording_name=names.append,
+            TextDocument=lambda text, **kwargs: documents.append(json.loads(text)),
             EncodedImage=lambda *, contents, media_type: captured.append(contents),
             TextLog=lambda x: x,
             Scalars=lambda x: x,
@@ -171,6 +190,9 @@ def main():
             output = root / "viewer.rrd"
             viewer.export(manifest, results, output)
             assert captured[0] == original
+            assert documents[0] == provenance
+            assert names[0] == f"viewer [{provenance['results_sha256'][:12]}]"
+            assert logged[0][0][0] == "provenance" and logged[0][1]["static"] is True
             image.write_bytes(original)
             viewer.export(manifest, candidate_results, root / "candidate.rrd")
             assert initialized[0][0] == initialized[1][0] == "asl_replay"

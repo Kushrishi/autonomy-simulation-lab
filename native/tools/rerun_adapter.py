@@ -133,6 +133,34 @@ def viewer_recording_id(recording_hash, records, poses, changes):
     return hashlib.sha256(raw.encode()).hexdigest()
 
 
+def recording_provenance(recording_hash, records):
+    """Describe all displayed configurations, including heterogeneous recordings."""
+    keys = (
+        "model_sha256",
+        "preprocessing",
+        "runtime",
+        "provider",
+        "threads",
+        "graph_optimization",
+        "dtype",
+        "output_shape",
+    )
+    configurations = {}
+    for row in records:
+        configuration = {key: row[key] for key in keys}
+        identity = json.dumps(configuration, sort_keys=True, separators=(",", ":"))
+        if identity not in configurations:
+            configurations[identity] = {"configuration": configuration, "frame_ids": []}
+        configurations[identity]["frame_ids"].append(row["frame_id"])
+    return {
+        "schema": "asl-viewer-provenance-v1",
+        "manifest_sha256": recording_hash,
+        "results_sha256": result_digest(records),
+        "frame_count": len(records),
+        "configurations": list(configurations.values()),
+    }
+
+
 def export(manifest, results, output, spatial=None, comparison=None):
     import rerun as rr
 
@@ -151,6 +179,13 @@ def export(manifest, results, output, spatial=None, comparison=None):
         strict=True,
     )
     rr.save(output)
+    provenance = recording_provenance(recording_hash, records)
+    rr.send_recording_name(f"{output.stem} [{provenance['results_sha256'][:12]}]")
+    rr.log(
+        "provenance",
+        rr.TextDocument(json.dumps(provenance, indent=2), media_type="text/plain"),
+        static=True,
+    )
     origin_time = records[0]["timestamp_ns"]
     for i, (row, image) in enumerate(zip(records, images)):
         rr.set_time("frame", sequence=i)
