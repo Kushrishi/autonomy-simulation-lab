@@ -57,7 +57,10 @@ This is an educational model, not a GNSS receiver or autonomous vehicle stack.
 
 Export JSON/CSV telemetry for [Python analysis](analysis/README.md).
 Tests cover planner correctness, weighted optimality, replanning helpers, input
-validation, range recovery and filter behavior. CI runs tests and build checks.
+validation, range recovery and filter behavior. The [independent numerical audit](analysis/numerical-audit/README.md)
+records NumPy/SciPy comparisons and v1.0.1 corrections. The filter uses an
+educational discrete Q=qI noise model; its covariance is not calibrated for the
+simulator’s deterministic noise. CI runs tests and build checks.
 
 From a checkout:
 

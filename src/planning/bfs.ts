@@ -1,3 +1,4 @@
+import { hasValidEndpoints } from "./validEndpoints";
 import type { PlannerResult, Position, Scenario } from "../simulation/types";
 import { calculatePathCost } from "../simulation/terrain";
 
@@ -58,6 +59,9 @@ function rebuildPath(
 }
 
 export function runBfs(scenario: Scenario): PlannerResult {
+  if (!hasValidEndpoints(scenario)) {
+    return { path: [], visited: [], success: false, pathCost: 0 };
+  }
   const queue: Position[] = [scenario.start];
   const visited: Position[] = [];
   const visitedSet = new Set<string>([positionKey(scenario.start)]);

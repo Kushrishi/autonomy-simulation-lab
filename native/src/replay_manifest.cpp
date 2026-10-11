@@ -54,6 +54,12 @@ std::uint64_t parse_timestamp(const std::string& value, std::size_t line_number)
     if (value.empty()) {
         throw std::runtime_error("line " + std::to_string(line_number) + ": empty timestamp");
     }
+    // stoull accepts an optional sign and leading whitespace; -1 would wrap
+    // to UINT64_MAX. The recording contract requires decimal unsigned digits.
+    if (value.find_first_not_of("0123456789") != std::string::npos) {
+        throw std::runtime_error("line " + std::to_string(line_number) +
+                                 ": timestamp_ns is not an unsigned integer");
+    }
 
     std::size_t parsed = 0;
     std::uint64_t timestamp = 0;

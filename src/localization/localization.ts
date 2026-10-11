@@ -85,7 +85,7 @@ export function buildRangeObservations(
     return beacons.map((beacon, index) => {
         const trueRange = distance(truePosition, beacon.position);
         const measuredRange = Math.max(
-            0.05,
+            0,
             trueRange + generateRangeNoise(step, index, noiseLevel)
         );
 
@@ -122,15 +122,15 @@ export function estimatePositionFromRanges(
         for (const observation of observations) {
             const rowDifference = estimate.row - observation.beaconPosition.row;
             const colDifference = estimate.col - observation.beaconPosition.col;
-            const predictedRange = Math.max(
-                Math.sqrt(
+            const predictedRange = Math.sqrt(
                     rowDifference * rowDifference + colDifference * colDifference
-                ),
-                1e-6
             );
 
-            const rowDerivative = rowDifference / predictedRange;
-            const colDerivative = colDifference / predictedRange;
+            // Euclidean range is nondifferentiable at a beacon. A zero row
+            // contributes no directional information there; other beacons
+            // determine the step. Keep the residual's geometric range exact.
+            const rowDerivative = predictedRange === 0 ? 0 : rowDifference / predictedRange;
+            const colDerivative = predictedRange === 0 ? 0 : colDifference / predictedRange;
             const residual = observation.measuredRange - predictedRange;
 
             h11 += rowDerivative * rowDerivative;

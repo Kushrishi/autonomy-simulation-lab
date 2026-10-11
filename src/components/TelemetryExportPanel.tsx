@@ -61,8 +61,10 @@ export default function TelemetryExportPanel({
       </div>
 
       <p className="panel-note">
-        Export planner, path, visited-cell, and localization telemetry for
-        external analysis in Python or spreadsheet tools.
+        Export the current plan and observations through the displayed step.
+        Replanning starts a new localization segment; previous segments are not
+        retained. Planning time accumulates within an animation. Positions and
+        errors use grid-cell units, and time uses simulation steps.
       </p>
     </section>
   );

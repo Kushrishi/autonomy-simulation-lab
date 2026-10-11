@@ -1,3 +1,4 @@
+import { hasValidEndpoints } from "./validEndpoints";
 import type { PlannerResult, Position, Scenario } from "../simulation/types";
 import { calculatePathCost, getMoveCost } from "../simulation/terrain";
 import { manhattanDistance } from "./manhattan";
@@ -65,6 +66,9 @@ function getScore(scoreMap: Map<string, number>, position: Position): number {
 }
 
 export function runAstar(scenario: Scenario): PlannerResult {
+  if (!hasValidEndpoints(scenario)) {
+    return { path: [], visited: [], success: false, pathCost: 0 };
+  }
   const openSet = new MinPriorityQueue<Position>();
   const closedSet = new Set<string>();
   const visited: Position[] = [];

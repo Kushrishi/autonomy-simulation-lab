@@ -42,4 +42,17 @@ describe("telemetry contract", () => {
     expect(payload.metrics.status).toBe("complete");
     expect(payload.localizationSamples[0].rangeObservations[0].measuredRange).not.toBe(99);
   });
+  it("exports range and Kalman estimates and errors alongside smoothing", () => {
+    const input = fixture();
+    input.scenario.name = "plain";
+    const sample = input.localizationSamples[0];
+    sample.rangeEstimatedPosition = { row: 1.25, col: 2.5 };
+    sample.rangeError = 3.25;
+    sample.kalmanEstimatedPosition = { row: 4.25, col: 5.5 };
+    sample.kalmanError = 6.25;
+    const [header, first] = convertSamplesToCsvRows(buildPayload(input)).split("\n");
+    expect(header).toContain('"range_estimated_row","range_estimated_col","range_error","kalman_estimated_row","kalman_estimated_col","kalman_error"');
+    expect(first).toContain('"1.2500","2.5000","3.2500","4.2500","5.5000","6.2500"');
+  });
+
 });

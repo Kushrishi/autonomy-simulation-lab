@@ -1,0 +1,135 @@
+{
+  "baseline_commit": "b20f6764e236d5207d8b82088fbcbdda24203dbb",
+  "numpy": "2.3.5",
+  "scipy": "1.17.0",
+  "kalman": [
+    {
+      "name": "default",
+      "steps": 12,
+      "before": {
+        "max_state_abs": 4.440892098500626e-16,
+        "max_covariance_abs": 5.828670879282072e-16,
+        "max_asymmetry": 4.163336342344337e-17,
+        "min_covariance_eigenvalue": 0.040936759653994334
+      },
+      "after": {
+        "max_state_abs": 1.3877787807814457e-16,
+        "max_covariance_abs": 2.7755575615628914e-17,
+        "max_asymmetry": 0.0,
+        "min_covariance_eigenvalue": 0.040936759653994334
+      }
+    },
+    {
+      "name": "correlated_half_step",
+      "steps": 12,
+      "before": {
+        "max_state_abs": 8.881784197001252e-16,
+        "max_covariance_abs": 4.718447854656915e-16,
+        "max_asymmetry": 3.469446951953614e-16,
+        "min_covariance_eigenvalue": 0.048135231765327365
+      },
+      "after": {
+        "max_state_abs": 8.881784197001252e-16,
+        "max_covariance_abs": 2.220446049250313e-16,
+        "max_asymmetry": 0.0,
+        "min_covariance_eigenvalue": 0.048135231765327365
+      }
+    },
+    {
+      "name": "small_valid_covariance",
+      "steps": 12,
+      "before": {
+        "max_state_abs": 0.3092317335340784,
+        "max_covariance_abs": 8.16574850299401e-07,
+        "max_asymmetry": 5.169878828456423e-24,
+        "min_covariance_eigenvalue": 6.652410367531322e-11
+      },
+      "after": {
+        "max_state_abs": 0.0,
+        "max_covariance_abs": 4.1359030627651384e-25,
+        "max_asymmetry": 0.0,
+        "min_covariance_eigenvalue": 1.514239243733721e-11
+      }
+    },
+    {
+      "name": "large_prior_small_measurement",
+      "steps": 12,
+      "before": {
+        "max_state_abs": 0.10585632970289849,
+        "max_covariance_abs": 1.0,
+        "max_asymmetry": 6.938893903907228e-18,
+        "min_covariance_eigenvalue": -3.124635660271981e-17
+      },
+      "after": {
+        "max_state_abs": 0.0,
+        "max_covariance_abs": 2.7755575615628914e-17,
+        "max_asymmetry": 0.0,
+        "min_covariance_eigenvalue": 0.0019393041155726948
+      }
+    },
+    {
+      "name": "singular_zero_information",
+      "steps": 12,
+      "before": {
+        "max_state_abs": 0.0,
+        "max_covariance_abs": 0.0,
+        "max_asymmetry": 0.0,
+        "min_covariance_eigenvalue": 0.0
+      },
+      "after": {
+        "max_state_abs": 0.0,
+        "max_covariance_abs": 0.0,
+        "max_asymmetry": 0.0,
+        "min_covariance_eigenvalue": 0.0
+      }
+    },
+    {
+      "name": "long_sequence",
+      "steps": 5000,
+      "before": {
+        "max_state_abs": 2.2737367544323206e-13,
+        "max_covariance_abs": 8.881784197001252e-16,
+        "max_asymmetry": 2.220446049250313e-16,
+        "min_covariance_eigenvalue": 0.05393766653248252
+      },
+      "after": {
+        "max_state_abs": 2.842170943040401e-14,
+        "max_covariance_abs": 6.661338147750939e-16,
+        "max_asymmetry": 0.0,
+        "min_covariance_eigenvalue": 0.05393766653248257
+      }
+    }
+  ],
+  "range_reference": {
+    "cases": 40,
+    "iterations": 8,
+    "max_position_difference": 1.8286356118627752e-08,
+    "max_squared_objective_difference": 5.412337245047638e-16,
+    "max_jacobian_finite_difference_error": 1.3394030329294537e-10
+  },
+  "zero_noise_corner": {
+    "before_measured_range": 0.05,
+    "after_measured_range": 0,
+    "before_max_residual": 0.05,
+    "after_max_residual": 0,
+    "before_off_corner_initial_estimate": {
+      "row": 0.017606399648475504,
+      "col": -0.017748575481775313
+    },
+    "after_off_corner_initial_estimate": {
+      "row": 1.2155758568652986e-16,
+      "col": 3.4354703431799935e-17
+    }
+  },
+  "matching_gaussian_model": {
+    "seed": 20261011,
+    "trajectories": 400,
+    "updates_per_trajectory": 40,
+    "mean_NEES": 3.9988444257396036,
+    "expected_NEES": 4,
+    "mean_NIS": 2.0020391787368044,
+    "expected_NIS": 2,
+    "max_TS_numpy_state_difference": 1.4210854715202004e-14,
+    "scope": "diagnostic only; not calibration evidence for deterministic browser noise"
+  }
+}

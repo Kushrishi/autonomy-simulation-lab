@@ -32,12 +32,12 @@ export default function MetricsPanel({
       </div>
 
       <div className="metric-row">
-        <span>Path steps</span>
+        <span>Current plan steps</span>
         <strong>{metrics.pathLength}</strong>
       </div>
 
       <div className="metric-row">
-        <span>Nodes visited</span>
+        <span>Current plan nodes visited</span>
         <strong>{metrics.nodesVisited}</strong>
       </div>
 
@@ -47,7 +47,7 @@ export default function MetricsPanel({
       </div>
 
       <div className="metric-row">
-        <span>Runtime</span>
+        <span>Cumulative planning time</span>
         <strong>{metrics.runtimeMs.toFixed(2)} ms</strong>
       </div>
 
