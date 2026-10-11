@@ -61,8 +61,8 @@ int main() {
                             "unsigned integer");
         }
         {
-            std::istringstream stream(manifest("frame-0001", "frame-0002", "0",
-                                               "18446744073709551615"));
+            std::istringstream stream(
+                manifest("frame-0001", "frame-0002", "0", "18446744073709551615"));
             const auto records = asl::replay::parse_manifest(stream);
             require(records[0].timestamp_ns == 0, "zero timestamp must remain valid");
             require(records[1].timestamp_ns == UINT64_MAX, "uint64 boundary must remain valid");
