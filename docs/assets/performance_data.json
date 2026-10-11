@@ -1,0 +1,49 @@
+{
+  "source_packet": "ASL_Center_Crop_Real_Probe_20261010.zip",
+  "source_packet_sha256": "05de26f6e43b53015d15fcf5e5cb198dfd6b120f12595c1546c54f6473fb967a",
+  "source_summary_sha256": "e6d2735313be3e91a42bd09f07d025372d2094c42de96419411d9922d42c072f",
+  "source_identities": {
+    "baseline": "9f2abe7cd58f04be57c55586f00042028659579c0bd43acb22b24ed25c77a7cd",
+    "candidate": "3167b138739a29e9fa8fa00f560b3718f261b947aa4273d49a1551c3b1fd1b29",
+    "manifest": "54fc829e1b3f49f1ae5673cc5360143943876f43cf7f008a10d7d9c188fa8063",
+    "model": "c0c3f76d93fa3fd6580652a45618618a220fced18babf65774ed169de0432ad5"
+  },
+  "pairs": [
+    {
+      "pair": 1,
+      "baseline_run": 0,
+      "candidate_run": 1,
+      "baseline_wall_seconds": 4.141379592998419,
+      "candidate_wall_seconds": 3.5931763839980704,
+      "exact_output_parity": true,
+      "baseline_record_sha256": "c0fd11ba1f50cb91bb819e03a67cffd6af97615d05c99bbc9b5f7bcbaa6f885a",
+      "candidate_record_sha256": "348d7ba3ef8f7c0796f35946e00bda215ddf9a5437a8953e063f96391a0c8383",
+      "whole_process_reduction_percent": 13.237212303049029
+    },
+    {
+      "pair": 2,
+      "baseline_run": 3,
+      "candidate_run": 2,
+      "baseline_wall_seconds": 3.9591646699991543,
+      "candidate_wall_seconds": 3.628907812999387,
+      "exact_output_parity": true,
+      "baseline_record_sha256": "f24d63b35459607fe63425e8fbe380fa17205aa9432e212915afcca2a71712eb",
+      "candidate_record_sha256": "8209af970dad05d333da727e47e909c915d1ec5614baf25c22a960338ceacce9",
+      "whole_process_reduction_percent": 8.341579209935668
+    },
+    {
+      "pair": 3,
+      "baseline_run": 4,
+      "candidate_run": 5,
+      "baseline_wall_seconds": 3.9802216890020645,
+      "candidate_wall_seconds": 3.6230019760041614,
+      "exact_output_parity": true,
+      "baseline_record_sha256": "390c0250c47744ec669a407f39e32a669333dd402512b4d56b185ca3a04704a5",
+      "candidate_record_sha256": "4bd6162f3c01b81c61f8dab97905e77eeeb6b0d11be724ac51e3e8a97b3568ba",
+      "whole_process_reduction_percent": 8.974869766298532
+    }
+  ],
+  "median_paired_reduction_percent": 8.974869766298532,
+  "frames_per_run": 108,
+  "scope": "One recording/model/host; whole-process wall including startup; exact identity/score/top-index parity excludes timings; no accuracy or CI claim; historical .partial artifacts retained"
+}

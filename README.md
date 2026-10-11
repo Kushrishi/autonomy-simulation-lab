@@ -14,10 +14,27 @@ explores planning and localization with synthetic measurements.
 
 | Workflow | What you can do | Current status |
 | --- | --- | --- |
-| Native C++/Python replay | Verify frame/model identity, execute CPU inference, compare outputs and inspect an optional Rerun recording. | Installed 108-frame comparison and complete viewer-packet recovery passed. Historical output residue remains unexplained; human desktop acceptance and independent first use remain open. No native release is published. |
-| Browser simulator | Compare grid planners, add obstacles, inspect noisy localization and export telemetry. | Released as [v1.0.0](https://github.com/Kushrishi/autonomy-simulation-lab/releases/tag/v1.0.0). |
+| Native C++/Python replay | Verify frame/model identity, execute CPU inference, compare outputs and inspect an optional Rerun recording. | Bounded engineering case study in maintenance. Installed 108-frame comparison passed; an older complete viewer packet is retained. Historical output residue, desktop acceptance and independent first use remain open. No native release is published. |
+| Browser simulator | Compare grid planners, add obstacles, inspect noisy localization and export telemetry. | [v1.0.2](https://github.com/Kushrishi/autonomy-simulation-lab/releases/tag/v1.0.2), feature-complete for this educational scope; maintenance only. |
 
 ## Native replay
+
+The original C++ crop-aware preprocessing optimization avoids computing resized
+pixels that the center crop discards, while preserving filtering coefficients,
+rounding and accumulation order. Three matched 108-frame pairs retained exact
+model-output parity: **8.9749% median reduction in whole-process wall time** and
+**57.5238% median reduction in summed per-frame preprocessing time**. These are
+different measurements, on one Linux host, one MobileNetV2 model and one workload;
+startup, cache and scheduling were not fully controlled. No accuracy improvement
+or general throughput guarantee is established.
+
+![Actual matched whole-process timing pairs](docs/assets/native_asl_matched_wall_time.png)
+
+See the [controlled replay case study](native/CONTROLLED_REPLAY_CASE_STUDY.md)
+for all pairs, source identities, ordinary-script comparison and limitations.
+ASL implements the preprocessing, input contracts and comparison integration;
+ONNX Runtime, MobileNetV2, KITTI, libpng and Rerun supply their respective runtime,
+model, data, decoder and viewer.
 
 The runner validates timestamps and consumed file bytes, decodes bounded PNG
 images, applies an explicit preprocessing contract and executes a pinned ONNX
@@ -39,6 +56,9 @@ now flags residue after process exit. Its original cause remains unresolved.
 See [release acceptance](native/RELEASE_READINESS_2026_10.md) for the remaining
 requirements. Same-host repeatability and changed predictions do not establish
 perception accuracy, sensor fusion or cross-platform determinism.
+The older complete viewer packet and the incomplete newer provenance packet
+are distinct retained artifacts; neither headless readback nor recovery replaces
+human graphical acceptance. No new inference is needed to inspect the older packet.
 
 ## Browser simulator
 
@@ -61,6 +81,14 @@ validation, range recovery and filter behavior. The [independent numerical audit
 records NumPy/SciPy comparisons and v1.0.1 corrections. The filter uses an
 educational discrete Q=qI noise model; its covariance is not calibrated for the
 simulator’s deterministic noise. CI runs tests and build checks.
+Gauss–Newton uses a bounded iteration budget, not an established convergence
+guarantee. v1.0.2 also fixes search visualization advancing movement progress;
+the owner accepted search at 0/15, movement at 15/15 and reset in Weighted Terrain
+Demo with Dijkstra on Mac. This is specific regression acceptance, not exhaustive
+browser certification. WebKit/Safari, import workflows, small screens and
+comprehensive accessibility acceptance remain incomplete; keyboard-only grid
+editing is unsupported. The existing screenshots reproduce the released A*
+dynamic scenario and remain representative.
 
 From a checkout:
 

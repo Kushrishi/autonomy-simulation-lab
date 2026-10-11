@@ -1,41 +1,43 @@
 # Autonomy Simulation Lab roadmap
 
-Updated 10 October 2026. [Native acceptance](native/RELEASE_READINESS_2026_10.md)
+Updated 11 October 2026. [Native acceptance](native/RELEASE_READINESS_2026_10.md)
 
 ## Deliverable
 
 A recorded-data comparison tool for a sensing engineer: verify a recording,
 execute two processing configurations, identify changed frames and inspect the
 image, timing and spatial context together. The native C++/Python workflow is
-the current development focus. The released browser simulator remains a separate
+a bounded engineering case study in maintenance. The released browser simulator remains a separate
 educational demonstration of planning and localization.
 
 ## Milestones and decisions
 
 | Milestone | Status | Work and completion evidence | Decision afterward |
 | --- | --- | --- | --- |
-| Browser simulator | Released as v1.0.0 | Interactive planning/localization, tests and telemetry export. | Maintain correctness and compatibility; no browser redesign is needed for the native deliverable. |
+| Browser simulator | Released as v1.0.2; maintenance only | Interactive planning/localization, tests and telemetry export. | Maintain correctness and compatibility; no browser redesign is needed for the native deliverable. |
 | Installed real-recording comparison | Completed with limitations | All 108 original frames recovered with matching hashes; relocated native install executed both preprocessing configurations; comparison and viewer files verified. See [validation](native/INSTALLED_RECORDING_VALIDATION_2026_10_10.md). | Retain this as systems evidence, not perception accuracy or independent cross-host reproduction. |
 | Reliable output and artifact recovery | Packet recovered; historical residue cause open | Complete viewer packet recovered with matching part/archive hashes and ZIP CRCs. The comparison rejects post-exit residue; successful native execution checks lock release. Preserve the original diagnostic files. | Investigate the historical cause only from new evidence or isolated filesystem checks. Detection and checked cleanup do not explain an earlier failure. |
 | Desktop acceptance | Pending person; packet available | Open the retained recording/layout, navigate beginning/middle/end, inspect camera/timing/skew/ENU panels and close/reopen. Record setup, readability and responsiveness failures. | Fix observed usability problems before claiming the native workflow is ready for release. SDK readback is not this check. |
-| Native release candidate | Conditional | Document supported OS/dependencies, build from a fresh checkout, run the installed synthetic example and real-data instructions, retain evidence and notices, and complete independent first use. | Publish a narrowly scoped native release after acceptance and release approval; browser v1.0.0 does not imply native release readiness. |
+| Native release candidate | Conditional | Document supported OS/dependencies, build from a fresh checkout, run the installed synthetic example and real-data instructions, retain evidence and notices, and complete independent first use. | Publish a narrowly scoped native release after acceptance and release approval; browser v1.0.2 does not imply native release readiness. |
 | Next workload | Deferred | Select a new sensor, model or adapter only from a demonstrated user task and specify an evaluation against a simple existing workflow. | Extend the working replay tool, not an unbounded autonomous-driving platform. A paper requires a separate research contribution. |
 
-## Immediate order
+## Maintenance decision
 
-1. Use the recovered full viewer packet for the
-   [desktop acceptance procedure](native/USABILITY.md#desktop-acceptance-of-the-retained-recording).
-   No new inference is needed for this inspection.
-2. Verify installation and the included synthetic example on a second machine;
-   record platform/dependency problems separately from viewer usability.
-3. Preserve the historical output-cleanup evidence. Further diagnosis needs new
-   evidence or isolated filesystem checks, not another real-recording run.
-4. Fix observed installation/usability problems and complete independent first
-   use before assessing native release readiness.
+The browser is feature-complete for its existing educational scope. Native ASL
+is a bounded C++ case study with a measured exact-parity preprocessing optimization;
+no native release, new workload or feature campaign is authorized. Preserve the
+numerical audit and all historical outcomes.
 
-These are completion dependencies, not promised dates. The current blocker is
-not lack of another perception experiment. Adding datasets or retraining models
-would not establish the missing desktop acceptance.
+The remaining human check uses the older complete viewer packet through the
+[desktop procedure](native/USABILITY.md#desktop-acceptance-of-the-retained-recording).
+The newer provenance-enhanced packet is incomplete. Inspect retained recordings
+without rerunning inference. Independent first use remains unmeasured. Investigate
+historical residue only if new substantive evidence appears; do not equate current
+checked cleanup with an explanation of the earlier failure.
+
+Future release or compatibility work requires a demonstrated defect or an actual
+supported-user need. The milestone table records conditional acceptance requirements,
+not an active development campaign or permission to publish a native release.
 
 ## Relevant standards
 
