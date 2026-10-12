@@ -2,7 +2,7 @@
 
 This presentation derivative spaces the title, takeaway and legend more clearly.
 It changes no measurements, pair ordering or accepted conclusions. The original
-[PNG](../native_asl_matched_wall_time.png), [SVG](../native_asl_matched_wall_time.svg),
+[PNG](../native_asl_matched_wall_time.png),
 [generator](../make_performance_figure.py) and [source JSON](../performance_data.json) remain unchanged.
 
 | Pair | Baseline wall time (s) | Candidate wall time (s) | Reduction |
@@ -33,3 +33,6 @@ The source JSON SHA-256 is
 `9abbd18cc1009551e02e814eba70a1498c82c50ba8e9d2982d7826c00f3fc23c`.
 The generator asserts that rendered bar heights equal the original six floats.
 Whole-process parity does not recalculate the separate preprocessing-stage result.
+
+The accepted original SVG is retained in the private evidence archive; it was
+not present in the main repository and is not newly published by this PR.
