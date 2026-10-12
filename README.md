@@ -14,7 +14,7 @@ explores planning and localization with synthetic measurements.
 
 | Workflow | What you can do | Current status |
 | --- | --- | --- |
-| Native C++/Python replay | Verify frame/model identity, execute CPU inference, compare outputs and inspect an optional Rerun recording. | Bounded engineering case study in maintenance. Installed 108-frame comparison passed; an older complete viewer packet is retained. Historical output residue, desktop acceptance and independent first use remain open. No native release is published. |
+| Native C++/Python replay | Verify frame/model identity, execute CPU inference, compare outputs and inspect an optional Rerun recording. | Bounded engineering case study in maintenance. Installed 108-frame comparison passed; an older complete viewer packet is retained. Owner-side Mac graphical inspection passed for both accepted recordings in Rerun 0.38.1 at frames 0, 53, 107, 95, 93 and 94. Historical residue remains unexplained; independent first use and close/reopen persistence remain unestablished. No native release is published. |
 | Browser simulator | Compare grid planners, add obstacles, inspect noisy localization and export telemetry. | [v1.0.2](https://github.com/Kushrishi/autonomy-simulation-lab/releases/tag/v1.0.2), feature-complete for this educational scope; maintenance only. |
 
 ## Native replay
@@ -60,8 +60,12 @@ See [release acceptance](native/RELEASE_READINESS_2026_10.md) for the remaining
 requirements. Same-host repeatability and changed predictions do not establish
 perception accuracy, sensor fusion or cross-platform determinism.
 The older complete viewer packet and the incomplete newer provenance packet
-are distinct retained artifacts; neither headless readback nor recovery replaces
-human graphical acceptance. No new inference is needed to inspect the older packet.
+are distinct retained artifacts. The owner independently restored the accepted
+baseline/candidate comparison archive, verified both recording hashes and completed
+bounded graphical inspection on an Apple Silicon Mac. Twelve full-resolution
+screenshots were reviewed and retained privately; no KITTI imagery is redistributed
+here. This is owner-side acceptance, not independent first use, perception accuracy
+or a close/reopen persistence result. No inference was rerun for this inspection.
 
 ## Browser simulator
 
