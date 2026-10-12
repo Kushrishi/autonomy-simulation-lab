@@ -28,7 +28,10 @@ different measurements, on one Linux host, one MobileNetV2 model and one workloa
 startup, cache and scheduling were not fully controlled. No accuracy improvement
 or general throughput guarantee is established.
 
-![Actual matched whole-process timing pairs](docs/assets/native_asl_matched_wall_time.png)
+![Recorded matched whole-process timing pairs, publication layout](docs/assets/publication/native-asl-wall-time-publication.png)
+
+[Recorded timing table and figure provenance](docs/assets/publication/README.md) ·
+[Original accepted figure, preserved](docs/assets/native_asl_matched_wall_time.png)
 
 See the [controlled replay case study](native/CONTROLLED_REPLAY_CASE_STUDY.md)
 for all pairs, source identities, ordinary-script comparison and limitations.
