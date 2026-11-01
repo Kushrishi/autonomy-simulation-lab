@@ -122,8 +122,11 @@ See [ACQUISITION.md](ACQUISITION.md) for user registration/download and
 A fresh checkout/build/install reproduction has been exercised on the development
 Linux host; it is not an independent external reproduction or clean operating
 system certification. The complete [108-frame real sequence](REAL_SEQUENCE_VALIDATION_2026_10.md) has
-passed import/replay/export/reopen. Human interactive viewer QA remains required
-before the current native release gate is met. See the [fresh-source audit](CLEANROOM_REPRODUCTION_2026_10.md). No tag/release is created.
+passed import, replay and export checks. The maintainer inspected the retained
+recordings in Rerun 0.38.1 on an Apple Silicon Mac; closing and reopening the
+viewer and installation by an independent user have not been tested. See the
+[current acceptance record](RELEASE_READINESS_2026_10.md) and
+[fresh-source audit](CLEANROOM_REPRODUCTION_2026_10.md). There is no native release.
 
 ## Installed recording-to-viewer workflow
 
