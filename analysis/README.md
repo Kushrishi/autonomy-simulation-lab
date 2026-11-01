@@ -64,3 +64,5 @@ python analysis/compare_planners.py analysis/data/file1.json analysis/data/file2
 ```
 
 This prints a planner comparison table in the terminal.
+
+Errors use grid-cell units. `N/A` means the export contains no measured localization errors; it does not mean zero error. Missing error values are excluded from the mean and RMSE.
