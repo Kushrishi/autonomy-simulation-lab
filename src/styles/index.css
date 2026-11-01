@@ -145,6 +145,8 @@ h1 {
 
 .grid-cell {
   aspect-ratio: 1;
+  padding: 0;
+  min-width: 0;
   display: grid;
   place-items: center;
   border-radius: 7px;
@@ -410,9 +412,11 @@ h1 {
   cursor: pointer;
 }
 
-.grid-cell:hover {
+.grid-cell:hover,
+.grid-cell:focus-visible {
   outline: 2px solid rgba(250, 204, 21, 0.6);
   outline-offset: -2px;
+  transform: none;
 }
 
 .metric-row {
@@ -496,18 +500,20 @@ h1 {
   height: 100%;
 }
 
+.comparison-scroll {
+  overflow-x: auto;
+}
+
 .comparison-table {
-  display: grid;
-  gap: 7px;
+  width: 100%;
+  border-spacing: 0 7px;
   margin-top: 12px;
 }
 
-.comparison-header,
-.comparison-row {
-  display: grid;
-  grid-template-columns: 0.9fr 0.55fr 0.65fr 0.75fr 0.85fr 0.85fr;
-  gap: 8px;
-  align-items: center;
+.comparison-table th,
+.comparison-table td {
+  padding: 8px 6px;
+  text-align: left;
 }
 
 .comparison-header {
@@ -526,7 +532,7 @@ h1 {
   font-size: 0.76rem;
 }
 
-.comparison-row strong {
+.comparison-row th {
   color: #f8fafc;
 }
 

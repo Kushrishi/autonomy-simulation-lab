@@ -705,6 +705,7 @@ function App() {
               sensorReadings={sensorReadings}
               localizationSample={currentLocalizationSample}
               onCellClick={handleCellEdit}
+              editingDisabled={isAnimating}
             />
             <div className="telemetry-strip" aria-label="Compact simulation telemetry">
               <div className="telemetry-pill">
@@ -795,6 +796,7 @@ function App() {
 
               <button
                 className={`secondary-button ${dynamicObstacleMode ? "active-mode-button" : ""}`}
+                aria-pressed={dynamicObstacleMode}
                 disabled={isAnimating}
                 onClick={handleDynamicObstacleModeToggle}
               >
@@ -818,7 +820,7 @@ function App() {
             <section className="panel">
               <h2>Scenario Editor</h2>
               <p className="panel-description">
-                Click grid cells to customize the current navigation scenario.
+                Select a tool, then click a grid cell or use the grid&apos;s keyboard controls.
               </p>
 
               <div className="editor-tools">
@@ -826,6 +828,7 @@ function App() {
                   (tool) => (
                     <button
                       key={tool}
+                      aria-pressed={selectedEditorTool === tool}
                       className={`editor-tool-button ${selectedEditorTool === tool ? "active-editor-tool" : ""
                         }`}
                       disabled={isAnimating}

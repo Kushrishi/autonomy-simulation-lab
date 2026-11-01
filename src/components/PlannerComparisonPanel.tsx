@@ -15,26 +15,31 @@ export default function PlannerComparisonPanel({
     <section className="panel">
       <h2>Planner Comparison</h2>
 
-      <div className="comparison-table">
-        <div className="comparison-header">
-          <span>Planner</span>
-          <span>Steps</span>
-          <span>Cost</span>
-          <span>Visited</span>
-          <span>Runtime</span>
-          <span>Directness</span>
-        </div>
-
-        {comparisons.map((comparison) => (
-          <div className="comparison-row" key={comparison.algorithm}>
-            <strong>{comparison.algorithm}</strong>
-            <span>{comparison.success ? comparison.pathLength : "Failed"}</span>
-            <span>{comparison.success ? comparison.pathCost.toFixed(1) : "—"}</span>
-            <span>{comparison.nodesVisited}</span>
-            <span>{comparison.runtimeMs.toFixed(2)} ms</span>
-            <span>{comparison.directnessScore.toFixed(1)}%</span>
-          </div>
-        ))}
+      <div className="comparison-scroll">
+        <table className="comparison-table" aria-label="Planner comparison">
+          <thead>
+          <tr className="comparison-header">
+            <th scope="col">Planner</th>
+            <th scope="col">Steps</th>
+            <th scope="col">Cost</th>
+            <th scope="col">Visited</th>
+            <th scope="col">Runtime</th>
+            <th scope="col">Directness</th>
+          </tr>
+          </thead>
+          <tbody>
+          {comparisons.map((comparison) => (
+            <tr className="comparison-row" key={comparison.algorithm}>
+              <th scope="row">{comparison.algorithm}</th>
+              <td>{comparison.success ? comparison.pathLength : "Failed"}</td>
+              <td>{comparison.success ? comparison.pathCost.toFixed(1) : "—"}</td>
+              <td>{comparison.nodesVisited}</td>
+              <td>{comparison.runtimeMs.toFixed(2)} ms</td>
+              <td>{comparison.directnessScore.toFixed(1)}%</td>
+            </tr>
+          ))}
+          </tbody>
+        </table>
       </div>
 
       <p className="panel-note">

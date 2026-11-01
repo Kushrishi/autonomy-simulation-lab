@@ -1,3 +1,4 @@
+import { useId, useRef, useState } from "react";
 import type {
   LocalizationSample,
   Position,
@@ -15,6 +16,7 @@ type SimulatorGridProps = {
   sensorReadings: SensorReading[];
   localizationSample?: LocalizationSample;
   onCellClick?: (position: Position) => void;
+  editingDisabled?: boolean;
 };
 
 function samePosition(a: Position, b: Position): boolean {
@@ -81,7 +83,12 @@ export default function SimulatorGrid({
   sensorReadings,
   localizationSample,
   onCellClick,
+  editingDisabled = false,
 }: SimulatorGridProps) {
+  const instructionsId = useId();
+  const [activeCell, setActiveCell] = useState(0);
+  const cellRefs = useRef(new Map<number, HTMLButtonElement>());
+  const focusIndex = Math.min(activeCell, scenario.rows * scenario.cols - 1);
   const cells = [];
 
   for (let row = 0; row < scenario.rows; row++) {
@@ -141,26 +148,62 @@ export default function SimulatorGrid({
         label = "●";
       }
 
+      const index = row * scenario.cols + col;
+      const description = `Row ${row + 1}, column ${col + 1}: ${className
+        .replace("grid-cell", terrainType === "normal" ? "normal-terrain" : "")
+        .trim().split(/\s+/).map((state) => state.replaceAll("-", " ")).join(", ")}`;
+
       cells.push(
-        <div
+        <button
+          type="button"
           className={className}
           key={`${row}-${col}`}
-          onClick={() => onCellClick?.(position)}
+          ref={(node) => {
+            if (node) cellRefs.current.set(index, node);
+            else cellRefs.current.delete(index);
+          }}
+          aria-label={description}
+          aria-disabled={editingDisabled || !onCellClick}
+          tabIndex={index === focusIndex ? 0 : -1}
+          onFocus={() => setActiveCell(index)}
+          onClick={() => {
+            if (!editingDisabled) onCellClick?.(position);
+          }}
+          onKeyDown={(event) => {
+            let next: number;
+            switch (event.key) {
+              case "ArrowRight": next = row * scenario.cols + Math.min(col + 1, scenario.cols - 1); break;
+              case "ArrowLeft": next = row * scenario.cols + Math.max(col - 1, 0); break;
+              case "ArrowDown": next = Math.min(row + 1, scenario.rows - 1) * scenario.cols + col; break;
+              case "ArrowUp": next = Math.max(row - 1, 0) * scenario.cols + col; break;
+              case "Home": next = event.ctrlKey ? 0 : row * scenario.cols; break;
+              case "End": next = event.ctrlKey ? scenario.rows * scenario.cols - 1 : (row + 1) * scenario.cols - 1; break;
+              default: return;
+            }
+            event.preventDefault();
+            cellRefs.current.get(next)?.focus();
+          }}
         >
           {label}
-        </div>
+        </button>
       );
     }
   }
 
   return (
+    <>
+    <p className="panel-note" id={instructionsId}>Use arrow keys to move between cells and Enter or Space to apply the selected editor tool. Editing pauses while the simulation runs.</p>
     <div
       className="simulator-grid"
+      role="group"
+      aria-label="Scenario editor"
+      aria-describedby={instructionsId}
       style={{
         gridTemplateColumns: `repeat(${scenario.cols}, 1fr)`,
       }}
     >
       {cells}
     </div>
+    </>
   );
 }
