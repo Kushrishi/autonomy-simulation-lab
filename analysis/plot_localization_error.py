@@ -54,7 +54,7 @@ def plot_localization_error(dataframe: pd.DataFrame, output_path: Path) -> None:
 
     plt.title("Localization Error Over Time")
     plt.xlabel("Simulation step")
-    plt.ylabel("Position error")
+    plt.ylabel("Position error (grid cells)")
     plt.legend()
     plt.grid(True, alpha=0.3)
     plt.tight_layout()
