@@ -27,14 +27,14 @@ def summarize_payload(payload: dict[str, Any], source_file: Path) -> dict[str, A
     average_error = (
         sum(localization_errors) / len(localization_errors)
         if localization_errors
-        else 0
+        else None
     )
 
     rmse = (
         (sum(error * error for error in localization_errors) / len(localization_errors))
         ** 0.5
         if localization_errors
-        else 0
+        else None
     )
 
     return {
@@ -83,6 +83,8 @@ def print_summary_table(rows: list[dict[str, Any]]) -> None:
     print("-" * 120)
 
     for row in rows:
+        average = "N/A" if row["average_error"] is None else f"{row['average_error']:.3f}"
+        rmse = "N/A" if row["rmse"] is None else f"{row['rmse']:.3f}"
         print(
             f"{row['file']:<32} "
             f"{row['scenario']:<28} "
@@ -91,8 +93,8 @@ def print_summary_table(rows: list[dict[str, Any]]) -> None:
             f"{row['nodes_visited']:>8} "
             f"{row['runtime_ms']:>10.3f} "
             f"{row['localization_samples']:>8} "
-            f"{row['average_error']:>10.3f} "
-            f"{row['rmse']:>10.3f}"
+            f"{average:>10} "
+            f"{rmse:>10}"
         )
 
     print("=" * 120)

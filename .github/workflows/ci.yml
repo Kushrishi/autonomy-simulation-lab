@@ -30,6 +30,9 @@ jobs:
       - name: Run tests
         run: npm test
 
+      - name: Test telemetry analysis
+        run: python3 -m unittest discover -s analysis -p "test_*.py"
+
       - name: Lint
         run: npm run lint
 
