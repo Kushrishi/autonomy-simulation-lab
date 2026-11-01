@@ -107,8 +107,9 @@ recording with the original ONNX Runtime directory unavailable, then validates
 candidate-to-comparison viewer preparation using installed tools only. It needs
 no Rerun dependency for that boundary check. The subsequent [installed real-recording validation](INSTALLED_RECORDING_VALIDATION_2026_10_10.md)
 executed both configurations on all 108 recovered real frames, exported and
-verified the candidate recording, and prepared its viewer layout. Human desktop
-inspection has since passed on the owner’s Apple Silicon Mac using Rerun 0.38.1
-and both exact accepted recordings at frames 0, 53, 107, 95, 93 and 94. Independent
-first use and close/reopen persistence remain unestablished. The screenshots and
-original recordings remain private; this does not establish model accuracy.
+verified the candidate recording, and prepared its viewer layout. The maintainer
+inspected both retained recordings in Rerun 0.38.1 on an
+Apple Silicon Mac at frames 0, 53, 107, 95, 93 and 94. Installation by an
+independent user and closing and reopening the viewer have not been tested.
+The screenshots and original recordings remain private. These checks do not
+measure model accuracy.
