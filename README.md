@@ -21,7 +21,9 @@ npm run dev
 
 Open `http://localhost:5173/autonomy-simulation-lab/`. On Windows PowerShell, use `npm.cmd` if script-execution policy blocks `npm`.
 
-The [v1.0.2 release](https://github.com/Kushrishi/autonomy-simulation-lab/releases/tag/v1.0.2) is an educational simulation. BFS ignores terrain weights; A* and Dijkstra use weighted costs. The Kalman filter takes position observations, not raw beacon ranges. The simplified noise model does not provide calibrated uncertainty. Keyboard-only grid editing is not supported.
+The browser is an educational simulation. BFS ignores terrain weights; A* and Dijkstra use weighted costs. The Kalman filter takes position observations, not raw beacon ranges. The simplified noise model does not provide calibrated uncertainty.
+
+Select an editor tool, then use Tab to enter the grid, arrow keys to move and Enter or Space to edit. Home/End move to the row edges; Ctrl+Home/End move to the first/last cell. Tab leaves the grid. Editing is paused during animation. These controls are in the current demo and main branch; the [v1.0.2 tag](https://github.com/Kushrishi/autonomy-simulation-lab/releases/tag/v1.0.2) predates them.
 
 [Telemetry analysis](analysis/README.md) · [Numerical checks and corrections](analysis/numerical-audit/README.md)
 
