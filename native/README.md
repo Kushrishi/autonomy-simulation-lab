@@ -114,7 +114,7 @@ graph rewrites; the default remains `disabled`. Every record identifies the
 selected level. Unknown levels fail before output publication.
 
 ```bash
-python3 tools/optimization_probe.py /path/to/asl-replay /path/to/manifest.tsv /path/to/model.onnx /fresh/evidence --model-sha SHA256
+python3 native/tools/optimization_probe.py /path/to/asl-replay /path/to/manifest.tsv /path/to/model.onnx /fresh/evidence --model-sha SHA256
 ```
 
 This retains a protocol before six interleaved disabled/basic runs, per-child
