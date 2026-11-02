@@ -6,11 +6,11 @@ has been published. [Roadmap](../ROADMAP.md) defines the execution order.
 | Requirement | Evidence | Remaining work |
 | --- | --- | --- |
 | Frame, model and preprocessing identity | Bounded consumed-byte validation, pinned runtime/model contracts and independent preprocessing reference checks. | Preserve the supported formats and explicit limits. |
-| Supported installation | Linux x86_64 and macOS arm64 CPU-inference CI; relocated install with original ONNX Runtime extraction unavailable. | Independent first use; system libpng/zlib and Python dependencies remain required. |
+| Supported installation | Linux x86_64 and macOS arm64 CPU-inference CI; relocated install with original ONNX Runtime extraction unavailable. | Installation by a new user remains untested; system libpng/zlib and Python dependencies remain required. |
 | Real recorded execution | All 108 frames replayed; actual RGB/BGR and preprocessing changes exercised. | No perception-accuracy claim follows; do not repeat the recording solely to restate completion. |
 | Installed comparison | Two executions on exact recovered frames completed; new baseline outputs matched retained baseline. | Original candidate partial/lock residue remains unexplained. The post-exit guard detects residue; native successful execution now also checks lock release. Neither establishes the historical cause. |
-| Visualization data | Owner-side Apple Silicon Mac graphical inspection passed in Rerun 0.38.1 for both exact accepted recordings at frames 0, 53, 107, 95, 93 and 94; twelve genuine screenshots retained privately. | Independent first use and close/reopen persistence remain unestablished; no accuracy or deployment validation. |
-| Reproducible deliverable | Owner independently restored the accepted baseline/candidate comparison archive and verified both recording hashes before graphical inspection. Earlier packet recovery remains recorded in its dated evidence. | Preserve the accepted originals and private visual evidence; do not substitute earlier recordings. |
+| Visualization data | The maintainer inspected both accepted recordings in Rerun 0.38.1 on an Apple Silicon Mac at frames 0, 53, 107, 95, 93 and 94; twelve genuine screenshots retained privately. | Installation by a new user and reopening saved sessions remain untested; these inspections do not establish accuracy or deployment readiness. |
+| Reproducible deliverable | The maintainer restored the accepted baseline/candidate comparison archive and verified both recording hashes before graphical inspection. Earlier packet recovery remains recorded in its dated evidence. | Preserve the accepted originals and private visual evidence; do not substitute earlier recordings. |
 | Native release | Source and third-party notices are included in the installed layout. | Resolve the open items above, document limitations and obtain release approval before tagging. |
 
 ## Acceptance procedure
