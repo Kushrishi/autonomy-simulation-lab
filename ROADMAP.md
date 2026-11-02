@@ -9,7 +9,7 @@ The browser simulator and native replay tool are separate deliverables. Both are
 | Browser simulator v1.0.2 | Planning, localization, tests and telemetry export | Educational simulation, not a GNSS receiver or vehicle autonomy system. |
 | Native recording comparison | [Installed validation](native/INSTALLED_RECORDING_VALIDATION_2026_10_10.md) covers all 108 original frames and both preprocessing configurations | Same-workload engineering evidence, not perception accuracy or independent reproduction. |
 | Crop-aware preprocessing | [Case study](native/CONTROLLED_REPLAY_CASE_STUDY.md) records three matched pairs with exact output parity | Approximately 8.97% median whole-process time reduction on one host, model and workload. |
-| Recording recovery and viewer inspection | Accepted recordings recovered and inspected on the maintainer's Mac at six selected frames each | Bounded maintainer testing, not independent first use or close/reopen acceptance. |
+| Recording recovery and viewer inspection | Accepted recordings recovered and inspected on the maintainer's Mac at six selected frames each | Maintainer inspection only; installation by a new user and reopening saved sessions were not tested. |
 
 ## Outstanding limitations
 
@@ -17,7 +17,7 @@ The native tool has no published release. Its [release-readiness record](native/
 
 - Historical output residue is detected, but its original cause is unresolved.
 - The complete accepted viewer packet and the incomplete newer provenance packet must not be treated as the same artifact.
-- Independent first use and close/reopen persistence have not been established.
+- Installation by a new user and reopening saved viewer sessions have not been tested.
 - A fresh-machine installation and supported dependency matrix remain release requirements.
 
 The browser's [numerical audit](analysis/numerical-audit/README.md) and documented accessibility/browser limitations remain relevant. No redesign is needed to preserve the existing example.
